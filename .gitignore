@@ -1,0 +1,25 @@
+# OS junk
+.DS_Store
+Thumbs.db
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+.env
+
+# ROS build artifacts (typical)
+build/
+install/
+log/
+
+# Editor
+.vscode/
+.idea/
+
+# Captures / maps
+captures/
+maps/
+*.bag
+*.db3
