@@ -1,0 +1,28 @@
+# stop services
+sudo systemctl stop kilo7-control kilo7-mqtt-bridge kilo7-safety-gate kilo7-relay-kill || true
+
+# install into /opt/kilo7 from extracted pack contents
+sudo rm -rf /opt/kilo7
+sudo mkdir -p /opt/kilo7
+sudo rsync -a --delete /home/kilo/Downloads/kilo7_backend_final/ /opt/kilo7/
+sudo chown -R kilo:kilo /opt/kilo7
+
+# deps
+/opt/kilo7/tools/install_pi_deps.sh
+
+# build
+source /opt/ros/humble/setup.bash
+cd /opt/kilo7/robot/ros_ws
+rm -rf build install log
+colcon build --merge-install --symlink-install --event-handlers console_direct+
+
+# verify discoverability
+env -i bash --noprofile --norc -lc '
+  source /opt/ros/humble/setup.bash
+  source /opt/kilo7/robot/ros_ws/install/setup.bash
+  ros2 pkg list | grep -x kilo_core
+'
+
+# start services
+sudo systemctl start kilo7-mqtt-bridge kilo7-safety-gate kilo7-relay-kill kilo7-control
+sudo systemctl status kilo7-control kilo7-mqtt-bridge kilo7-safety-gate kilo7-relay-kill --no-pager

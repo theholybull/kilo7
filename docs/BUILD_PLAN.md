@@ -1,3 +1,14 @@
+BUILD_PLAN.md — KILO .7 (Revised to match ROS2+MQTT backend package)
+
+Version: v1.1-revA
+Last updated: 2026-01-16
+Status: Canonical build plan (execution order + gates)
+Contract: INTERFACE_CONTRACTS v1.2 (sealed, additive-only)
+
+CHANGE NOTE (2026-01-16): This plan is revised to reflect that the “backend” is a ROS 2 workspace package and therefore ROS 2 is a hard prerequisite before installing/building the backend bundle.
+CHANGE NOTE (2026-01-16): PROJECT_STATE.md is immutable. Build progress is recorded in BUILD_LOG.md / CHANGELOG.md instead.
+CHANGE NOTE (2026-01-16): Transport is MQTT only; no HTTP assumptions are allowed.
+
 0) Global rules (apply to every step)
 
 Robot is headless. Phone = sensors + UI only.
@@ -6,273 +17,205 @@ One Safety Gate is the only stop authority.
 
 Core control must run without perception/nav.
 
+Offline-first.
+
+Additive-only interfaces: never rename/remove fields/topics.
+
 Every step produces:
 
 Acceptance checks (commands + expected outputs)
 
-Update docs/PROJECT_STATE.md with what changed and what’s next
+A short entry appended to docs/BUILD_LOG.md (or CHANGELOG.md) describing:
 
-Phase 1 — Bring-up (baseline must become boring)
-Step 1.1 — Dependency + tooling install (Pi)
+what changed
 
-Goal: Pi has everything needed for ROS 2 dev/runtime, MQTT, camera support tooling, and build utilities.
+what was verified
 
-Deliverable: “Dependency manifest” recorded in repo and install script committed.
+known issues / next step
 
-Install targets (decision-aligned)
+CHANGE NOTE: Replaces “Update docs/PROJECT_STATE.md…” because PROJECT_STATE is locked.
 
-ROS 2 (Debian packages)
+PHASE 0 — Prereq Gate (MUST PASS before any backend install)
+Step 0.1 — ROS 2 baseline must exist
 
-Build tools: cmake, colcon, vcs, python venv tooling
+Goal: The Pi can build and run ROS 2 Python nodes using colcon.
 
-MQTT broker + client tools: mosquitto, mosquitto-clients
+REQUIRED (gate):
 
-Git, curl, jq (optional), htop
-
-Udev utilities, USB tools
-
-(DepthAI comes later when we wire OAK-D; don’t enable heavy pipelines yet)
-
-Acceptance gate
+source /opt/ros/<distro>/setup.bash succeeds
 
 ros2 --help works
 
+python3 -c "import rclpy; print('rclpy ok')" works
+
 colcon --help works
 
-mosquitto -h works
+Acceptance checks (copy/paste):
 
-mosquitto_sub -h works
+source /opt/ros/*/setup.bash
+ros2 --help >/dev/null
+python3 -c "import rclpy; print('rclpy ok')"
+colcon --help >/dev/null
 
-Reboot and confirm nothing is wedged
 
-If gate fails: fix installs only—no code changes.
+If gate fails: fix ROS 2 install only. No backend debugging.
 
-Step 1.2 — Repo checkout + workspace skeleton (Pi)
+PHASE 1 — Bring-up (baseline must become boring)
+Step 1.1 — Dependency + tooling install (Pi)
 
-Goal: A ROS 2 workspace exists and builds cleanly with an empty “hello” package.
+Goal: Pi has system tools needed for the backend bundle (MQTT + build tooling + hardware daemons).
 
-Deliverable: robot/ contains ros_ws/ skeleton and a minimal package.
+Required targets:
 
-Acceptance gate
+Mosquitto broker + CLI: mosquitto, mosquitto-clients
 
-colcon build succeeds
+Utilities: git, curl, jq (optional), htop, unzip
 
-source install/setup.bash succeeds
+Hardware daemon deps if using real PWM: pigpio + pigpiod
 
-ros2 pkg list | grep <package> shows it
+Python deps used by nodes/scripts (as defined by backend package scripts)
 
-Step 1.3 — PWM driver node (Ackermann) with dead-stop
+Acceptance checks:
 
-Goal: A ROS 2 node outputs PWM at 60 Hz to steering + throttle and goes neutral on stale command.
+mosquitto -h >/dev/null
+mosquitto_sub -h >/dev/null
+unzip -v >/dev/null
 
-Constraints
+Step 1.2 — Install layout + runtime user (deployment assumptions)
 
-No perception, no nav
+Goal: Deploy layout matches backend README and systemd assumptions.
 
-No background heavy loops outside the 60 Hz control loop
+Required (per backend README):
 
-Stale timeout triggers neutral + lock
+Linux user: kilo
 
-Acceptance gate
+Install root: /opt/kilo7
 
-Node starts and stays running
+Workspace path: /opt/kilo7/robot/ros_ws
 
-Command updates steering/throttle
+Acceptance checks:
 
-Stop command neutralizes throttle
+id kilo
+test -d /opt/kilo7
+test -d /opt/kilo7/robot/ros_ws
 
-If commands stop → neutral within timeout
 
-Step 1.4 — Hardware kill relay (GPIO)
+If you’re installing on a dev machine and want a different path, you must provide overrides via:
 
-Goal: GPIO-controlled relay kill works independent of ROS node state.
+/etc/default/kilo7 and/or
 
-Acceptance gate
+/opt/kilo7/kilo7-backend.env
 
-Relay can be toggled reliably
+Step 1.3 — Backend package install (zip drop) + dependency script
 
-Kill cuts power to drive system as designed
+Goal: The backend bundle is unpacked and deps are installed, without “winging it.”
 
-On boot, relay defaults to safe state
+Acceptance checks:
 
-Step 1.5 — Status/telemetry baseline (robot publishes state)
+ls -la /opt/kilo7
+test -x /opt/kilo7/tools/install_pi_deps.sh
 
-Goal: Robot publishes health + control status so UI can show “what’s happening.”
 
-Acceptance gate
+Notes:
 
-MQTT topics publish:
+This step assumes ROS 2 already exists (Phase 0 passed).
 
-robot health
+This step must not start services yet unless explicitly required by the package.
 
-control state (armed, locked, stale)
+Step 1.4 — Build the ROS workspace (colcon)
 
-last command timestamp
+Goal: Workspace builds cleanly and produces install artifacts.
 
-Rate-limited (no spam)
+Acceptance checks:
 
-Phase 2 — Safety Gate (single stop authority)
-Step 2.1 — Safety Gate node (no sensors yet; stubs)
+sudo -u kilo bash -lc '
+source /opt/ros/*/setup.bash
+cd /opt/kilo7/robot/ros_ws
+colcon build
+test -f install/setup.bash
+'
 
-Goal: A Safety Gate exists as a single ROS node that other modules must obey.
+Step 1.5 — MQTT broker enablement + retained truth topics exist
 
-Acceptance gate
+Goal: MQTT broker runs and backend publishes retained truth topics.
 
-Gate outputs safe_to_move + reason
+Acceptance checks:
 
-When gate = false, control node refuses motion
+systemctl is-active --quiet mosquitto && echo mosquitto_ok
+mosquitto_sub -t kilo/health -C 1 -v
+mosquitto_sub -t kilo/state/safety -C 1 -v
+mosquitto_sub -t kilo/state/control -C 1 -v
 
-Lockout behavior is explicit and recoverable
 
-Step 2.2 — Phone IMU ingest (MQTT → ROS) + rollover rule
+Expected:
 
-Goal: Phone IMU arrives and rollover triggers safety stop.
+Each payload is JSON
 
-Acceptance gate
+Each includes schema_version and ts_ms
 
-IMU messages arrive reliably over MQTT
+kilo/state/safety should reflect “latched/override_required” defaults (per backend README)
 
-Rollover condition flips Safety Gate false with reason “rollover”
+kilo/state/control must show lock + stale behavior truthfully
 
-Recovery method works (manual clear / safe reset)
+Step 1.6 — Control + stop semantics are enforceable (no motion without truth)
 
-Step 2.3 — Impact detection (accel + jerk + context)
+Goal: Confirm dead-stop, stale neutral, and lock semantics are functioning.
 
-Goal: Impact triggers stop without false positives when idle.
+Acceptance checks (minimum):
 
-Acceptance gate
+Stop request causes lock + applied throttle neutral
 
-Impact event flips Safety Gate false with reason “impact”
+Stale cmd causes neutral within configured TTL
 
-Context gate prevents triggers while stationary unless commanded motion exists
+Heartbeat stale causes lockout (if enabled/configured)
 
-Step 2.4 — Component loss detection
+(Exact commands depend on how you inject test messages—MQTT publish or ROS internal topic—but outcomes are non-negotiable.)
 
-Goal: If critical component data goes stale, Safety Gate stops.
+PHASE 2 — Safety Gate (single arbiter)
+Step 2.1 — Safety Gate is the ONLY motion authority
 
-Acceptance gate
+Goal: Control enforcement obeys Safety Gate deny always.
 
-Stale timers for IMU/camera/tof publish “component_loss”
+Acceptance checks:
 
-Gate denies movement until restored or explicitly overridden (if allowed)
+When kilo/state/safety.safe_to_move=false, kilo/state/control.applied.throttle must be neutral (0.0)
 
-Phase 3 — Perception for avoidance (keep it minimal)
-Step 3.1 — OAK-D bring-up (RGB only first)
+Reason codes are stable and additive-only
 
-Goal: OAK-D RGB stream is accessible locally without destabilizing control.
+Step 2.2 — Phone IMU ingest (MQTT → robot truth)
 
-Acceptance gate
+Goal: Phone IMU can arrive, and Safety Gate can consume it (even if rules are stubbed early).
 
-RGB pipeline runs at chosen FPS without pegging CPU
+Acceptance checks:
 
-Control loop remains stable while camera runs
+Messages arrive on kilo/phone/imu
 
-Step 3.2 — OAK-D depth obstacle distance (front)
+Robot truth indicates validity/staleness via kilo/state/* (not inferred from phone stream)
 
-Goal: Produce a single front obstacle distance feed for Safety Gate / assist mode.
+Step 2.3 — Component loss detection (staleness)
 
-Acceptance gate
+Goal: Stale critical components cause deny/lock behavior as defined.
 
-Depth produces stable nearest-distance estimate
+Acceptance checks:
 
-Gate uses it to stop when too close
+If IMU (or required sensor) goes stale beyond TTL → Safety Gate deny with a stable reason code
 
-False stops are manageable (logged, explainable)
+Recovery is explicit and documented; nothing clears silently
 
-Step 3.3 — Rear ToF + rear cam ingest
+PHASE 3–7 — Reserved (do not implement early; only preserve contracts)
 
-Goal: Rear ToF supports reverse safety and recovery backing.
+Phase 3: Perception summaries only (no video over MQTT)
+Phase 4: Speed-aware safety model
+Phase 5: Mapping/localization opt-in
+Phase 6: Navigation with recoveries
+Phase 7: Docking/charging
 
-Acceptance gate
+Guardrails (must not change later):
 
-Rear ToF data is stable
+Requests vs truth separation stays intact (kilo/cmd/* vs kilo/state/*)
 
-Reverse motion is vetoed when rear too close
+Safety Gate reason codes are additive-only
 
-Rear cam available for UI/debug
+Control node command-timeout semantics remain stable
 
-Phase 4 — Speed-aware safety model (this prevents Viam pain)
-Step 4.1 — Speed profiles + dynamic stop distance
-
-Goal: Stop distance scales with speed; tuning is profile-based.
-
-Acceptance gate
-
-Profiles exist (crawl/normal/sport)
-
-Computed stop distance published and visible
-
-Increasing speed increases stop distance automatically
-
-Step 4.2 — Field tuning workflow
-
-Goal: Tuning can be done in the field without breaking everything.
-
-Acceptance gate
-
-Parameters adjustable at runtime (RAM apply)
-
-Changes are logged + reversible
-
-“Commit” requires explicit action
-
-Phase 5 — Mapping & Localization (2D, opt-in)
-Step 5.1 — Mapping mode (explicit)
-
-Goal: Build a map in mapping mode only.
-
-Acceptance gate
-
-Mapping can be started/stopped explicitly
-
-Control remains responsive
-
-Map saved to USB with a name
-
-Step 5.2 — Localization mode (default)
-
-Goal: Load a named map from USB and localize against it.
-
-Acceptance gate
-
-Select map name
-
-Localization stable enough for navigation experiments
-
-If localization fails, system degrades safely (no wedging)
-
-Phase 6 — Navigation (Nav2-style behavior)
-Step 6.1 — Simple autonomy behaviors (no docking)
-
-Goal: Go-to-goal with recovery behaviors.
-
-Acceptance gate
-
-Waypoint navigation works in a controlled space
-
-Recovery behaviors don’t fight Safety Gate
-
-Manual override always works
-
-Phase 7 — Docking/Charging (last)
-Step 7.1 — AprilTag-based approach
-
-Goal: Approach dock reliably.
-
-Acceptance gate
-
-Tag detection stable near dock
-
-Approach routine consistent and safe
-
-Step 7.2 — Pull-through docking + confirmation
-
-Goal: Dock and confirm contact/charging.
-
-Acceptance gate
-
-Switch confirms contact
-
-Charge sensing confirms charging
-
-Failures back off and retry safely
+No perception/nav dependency added into core control loop

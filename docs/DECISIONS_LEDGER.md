@@ -1,4 +1,11 @@
 # Decisions Ledger (append-only)
+Decisions Ledger entry (add this verbatim)
+
+Decision: ROS 2 is a hard prerequisite for the backend install package
+Date: 2026-01-16
+Why: Backend is a ROS 2 workspace/package requiring rclpy + colcon; attempting to “install backend first” wastes time and causes false backend debugging.
+Impact: BUILD_PLAN adds a prerequisite gate; PROJECT_STATE remains unchanged; future packages assume ROS is present.
+Guardrails: Does not change Interface Contracts v1.2, MQTT topics, authority model, or safety semantics.
 
 2026-01-13
 DECISION: Switch core platform to ROS 2 (offline-first).
