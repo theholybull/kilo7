@@ -1,0 +1,16 @@
+[Unit]
+Description=KILO7 Safety Gate (kilo_core)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=kilo
+EnvironmentFile=-/etc/default/kilo7
+EnvironmentFile=-/opt/kilo7/kilo7-backend.env
+ExecStart=/bin/bash -lc 'source ${KILO_ROS_WS:-/opt/kilo7/robot/ros_ws}/install/setup.bash && ros2 run kilo_core safety_gate --ros-args -p config:=${KILO_CONFIG:-""}'
+Restart=always
+RestartSec=1
+
+[Install]
+WantedBy=multi-user.target
