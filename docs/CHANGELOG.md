@@ -1,3 +1,18 @@
+## 2026-01-17 — CT-2026-01-17-RT-001 — Hotfix: backend runtime + repeatability
+
+### Fixed
+- Installed MQTT bridge dependency: `python3-paho-mqtt` (prevents `ModuleNotFoundError: No module named 'paho'`).
+- Patched systemd units (`kilo7-control`, `kilo7-safety-gate`, `kilo7-relay-kill`, `kilo7-mqtt-bridge`) to avoid invalid ROS CLI arg `-p config:=` when `KILO_CONFIG` is unset.
+  - Units now only pass `--ros-args -p config:=...` when `KILO_CONFIG` is non-empty.
+- Restored environment files for deterministic startup:
+  - `/etc/default/kilo7`
+  - `/opt/kilo7/kilo7-backend.env`
+
+### Verified
+- All services run without restart loops.
+- MQTT truth topics publish valid JSON: `kilo/health`, `kilo/state/safety`, `kilo/state/control`.
+
+
 CHANGE_LOG.md
 2026-01-16 — Backend Build Plan Alignment (ROS 2 Prerequisite Gate)
 
