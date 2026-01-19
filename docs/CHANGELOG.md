@@ -1,3 +1,32 @@
+## [2026-01-19] Backend Stabilization — MQTT Bridge UTF-8 Crash Fix
+
+### Fixed
+- Resolved fatal UTF-8 decode error in `kilo_core/mqtt_bridge.py` caused by a non-UTF8 cp1252 character (0x96, Windows en-dash) in a docstring.
+- Rebuilt ROS workspace to propagate corrected UTF-8 source into `build/` and `install/` overlays.
+- Fixed `kilo7-mqtt-bridge.service` ExecStart quoting and ROS environment sourcing so `ros2 run` launches reliably under systemd.
+- Prevented `kilo7-control` startup failure due to unset optional ROS environment variables (observed under systemd).
+
+### Changed
+- `kilo7-mqtt-bridge.service`: replaced fragile inline ExecStart with a shell-based invocation that explicitly sources ROS and workspace environments before execution.
+- `run/kilo7-control.sh`: removed `set -u` and defensively initialized `AMENT_TRACE_SETUP_FILES` to avoid abort on unset variables.
+
+### Verified
+- MQTT ↔ ROS bridge remains active and publishes state topics at expected cadence (no dropouts observed during validation window).
+- `/kilo/state/control` publishes live (non-retained) messages.
+- `/kilo/state/safety_json` and `/kilo/state/control_json` conform to the defined interface contract.
+- MQTT command topics observed and bridged as designed (no schema or topic changes introduced).
+
+### Known Issues
+- Safety Gate (Step 1.4) correctly enforces `OVERRIDE_REQUIRED` and `EXPLICIT_STOP`.
+- `kilo/state/control` reports `gate_safe_to_move=true` while `kilo/state/safety` reports deny.
+
+#### Impact
+- This mismatch can mislead downstream consumers or UI into believing motion is permitted when it is not.
+- Violates the invariant that **Safety Gate is the sole motion authority** if consumers treat control state as authoritative.
+
+#### Status
+- Diagnosed only.
+- No behavioral changes implemented in this change set.
 VERSION / DATE:
 2026-01-19
 
