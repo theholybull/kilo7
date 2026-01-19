@@ -1,0 +1,37 @@
+running develop
+running egg_info
+creating kilo_core.egg-info
+writing kilo_core.egg-info/PKG-INFO
+writing dependency_links to kilo_core.egg-info/dependency_links.txt
+writing entry points to kilo_core.egg-info/entry_points.txt
+writing requirements to kilo_core.egg-info/requires.txt
+writing top-level names to kilo_core.egg-info/top_level.txt
+writing manifest file 'kilo_core.egg-info/SOURCES.txt'
+reading manifest file 'kilo_core.egg-info/SOURCES.txt'
+writing manifest file 'kilo_core.egg-info/SOURCES.txt'
+running build_ext
+Creating /opt/kilo7/robot/ros_ws/install/lib/python3.10/site-packages/kilo-core.egg-link (link to .)
+Installing control_pwm script to /opt/kilo7/robot/ros_ws/install/lib/kilo_core
+Installing mqtt_bridge script to /opt/kilo7/robot/ros_ws/install/lib/kilo_core
+Installing relay_kill script to /opt/kilo7/robot/ros_ws/install/lib/kilo_core
+Installing safety_gate script to /opt/kilo7/robot/ros_ws/install/lib/kilo_core
+
+Installed /opt/kilo7/robot/ros_ws/build/kilo_core
+running symlink_data
+creating /opt/kilo7/robot/ros_ws/install/share
+creating /opt/kilo7/robot/ros_ws/install/share/ament_index
+creating /opt/kilo7/robot/ros_ws/install/share/ament_index/resource_index
+creating /opt/kilo7/robot/ros_ws/install/share/ament_index/resource_index/packages
+symbolically linking /opt/kilo7/robot/ros_ws/build/kilo_core/resource/kilo_core -> /opt/kilo7/robot/ros_ws/install/share/ament_index/resource_index/packages
+creating /opt/kilo7/robot/ros_ws/install/share/kilo_core
+symbolically linking /opt/kilo7/robot/ros_ws/build/kilo_core/package.xml -> /opt/kilo7/robot/ros_ws/install/share/kilo_core
+creating /opt/kilo7/robot/ros_ws/install/share/kilo_core/config
+symbolically linking /opt/kilo7/robot/ros_ws/build/kilo_core/config/kilo.yaml -> /opt/kilo7/robot/ros_ws/install/share/kilo_core/config
+creating /opt/kilo7/robot/ros_ws/install/share/kilo_core/systemd
+symbolically linking /opt/kilo7/robot/ros_ws/build/kilo_core/systemd/kilo7-control.service -> /opt/kilo7/robot/ros_ws/install/share/kilo_core/systemd
+symbolically linking /opt/kilo7/robot/ros_ws/build/kilo_core/systemd/kilo7-relay-kill.service -> /opt/kilo7/robot/ros_ws/install/share/kilo_core/systemd
+symbolically linking /opt/kilo7/robot/ros_ws/build/kilo_core/systemd/kilo7-mqtt-bridge.service -> /opt/kilo7/robot/ros_ws/install/share/kilo_core/systemd
+symbolically linking /opt/kilo7/robot/ros_ws/build/kilo_core/systemd/kilo7-safety-gate.service -> /opt/kilo7/robot/ros_ws/install/share/kilo_core/systemd
+symbolically linking /opt/kilo7/robot/ros_ws/build/kilo_core/systemd/kilo7-backend.env -> /opt/kilo7/robot/ros_ws/install/share/kilo_core/systemd
+creating /opt/kilo7/robot/ros_ws/install/share/kilo_core/hook
+symbolically linking /opt/kilo7/robot/ros_ws/build/kilo_core/hooks/ament_prefix_path.dsv -> /opt/kilo7/robot/ros_ws/install/share/kilo_core/hook

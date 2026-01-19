@@ -1,0 +1,20 @@
+[3.013s] Invoking command in '/opt/kilo7/robot/ros_ws/build/kilo_core': PYTHONPATH=/opt/kilo7/robot/ros_ws/build/kilo_core/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/opt/kilo7/robot/ros_ws/install/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py develop --editable --build-directory /opt/kilo7/robot/ros_ws/build/kilo_core/build --no-deps symlink_data
+[4.276s] running develop
+[5.053s] running egg_info
+[5.053s] writing kilo_core.egg-info/PKG-INFO
+[5.055s] writing dependency_links to kilo_core.egg-info/dependency_links.txt
+[5.056s] writing entry points to kilo_core.egg-info/entry_points.txt
+[5.057s] writing requirements to kilo_core.egg-info/requires.txt
+[5.058s] writing top-level names to kilo_core.egg-info/top_level.txt
+[5.067s] reading manifest file 'kilo_core.egg-info/SOURCES.txt'
+[5.072s] writing manifest file 'kilo_core.egg-info/SOURCES.txt'
+[5.079s] running build_ext
+[5.080s] Creating /opt/kilo7/robot/ros_ws/install/lib/python3.10/site-packages/kilo-core.egg-link (link to .)
+[5.084s] Installing control_pwm script to /opt/kilo7/robot/ros_ws/install/lib/kilo_core
+[5.085s] Installing mqtt_bridge script to /opt/kilo7/robot/ros_ws/install/lib/kilo_core
+[5.086s] Installing relay_kill script to /opt/kilo7/robot/ros_ws/install/lib/kilo_core
+[5.087s] Installing safety_gate script to /opt/kilo7/robot/ros_ws/install/lib/kilo_core
+[5.089s] 
+[5.089s] Installed /opt/kilo7/robot/ros_ws/build/kilo_core
+[5.090s] running symlink_data
+[5.240s] Invoked command in '/opt/kilo7/robot/ros_ws/build/kilo_core' returned '0': PYTHONPATH=/opt/kilo7/robot/ros_ws/build/kilo_core/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/opt/kilo7/robot/ros_ws/install/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py develop --editable --build-directory /opt/kilo7/robot/ros_ws/build/kilo_core/build --no-deps symlink_data

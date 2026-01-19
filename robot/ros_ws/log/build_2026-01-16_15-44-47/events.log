@@ -1,0 +1,91 @@
+[0.000000] (-) TimerEvent: {}
+[0.000948] (kilo_core) JobQueued: {'identifier': 'kilo_core', 'dependencies': OrderedDict()}
+[0.001554] (kilo_core) JobStarted: {'identifier': 'kilo_core'}
+[0.097726] (-) TimerEvent: {}
+[0.198383] (-) TimerEvent: {}
+[0.299234] (-) TimerEvent: {}
+[0.400215] (-) TimerEvent: {}
+[0.500912] (-) TimerEvent: {}
+[0.601570] (-) TimerEvent: {}
+[0.702211] (-) TimerEvent: {}
+[0.802839] (-) TimerEvent: {}
+[0.903521] (-) TimerEvent: {}
+[1.004157] (-) TimerEvent: {}
+[1.104997] (-) TimerEvent: {}
+[1.206124] (-) TimerEvent: {}
+[1.306979] (-) TimerEvent: {}
+[1.407660] (-) TimerEvent: {}
+[1.509027] (-) TimerEvent: {}
+[1.610107] (-) TimerEvent: {}
+[1.710753] (-) TimerEvent: {}
+[1.811434] (-) TimerEvent: {}
+[1.912065] (-) TimerEvent: {}
+[2.012695] (-) TimerEvent: {}
+[2.113363] (-) TimerEvent: {}
+[2.214020] (-) TimerEvent: {}
+[2.314659] (-) TimerEvent: {}
+[2.415372] (-) TimerEvent: {}
+[2.516074] (-) TimerEvent: {}
+[2.616877] (-) TimerEvent: {}
+[2.691811] (kilo_core) Command: {'cmd': ['/usr/bin/python3', '-W', 'ignore:setup.py install is deprecated', '-W', 'ignore:easy_install command is deprecated', 'setup.py', 'develop', '--editable', '--build-directory', '/opt/kilo7/robot/ros_ws/build/kilo_core/build', '--no-deps', 'symlink_data'], 'cwd': '/opt/kilo7/robot/ros_ws/build/kilo_core', 'env': {'LESSOPEN': '| /usr/bin/lesspipe %s', 'USER': 'kilo', 'SSH_CLIENT': '10.10.10.46 54845 22', 'XDG_SESSION_TYPE': 'tty', 'SHLVL': '1', 'LD_LIBRARY_PATH': '/opt/ros/humble/lib/aarch64-linux-gnu:/opt/ros/humble/lib', 'MOTD_SHOWN': 'pam', 'HOME': '/home/kilo', 'OLDPWD': '/home/kilo', 'SSH_TTY': '/dev/pts/0', 'ROS_PYTHON_VERSION': '3', 'DBUS_SESSION_BUS_ADDRESS': 'unix:path=/run/user/1000/bus', 'ROS_DISTRO': 'humble', 'LOGNAME': 'kilo', '_': '/usr/bin/colcon', 'ROS_VERSION': '2', 'XDG_SESSION_CLASS': 'user', 'TERM': 'xterm', 'XDG_SESSION_ID': '9', 'ROS_LOCALHOST_ONLY': '0', 'PATH': '/home/kilo/.local/bin:/home/kilo/.local/bin:/opt/ros/humble/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin', 'XDG_RUNTIME_DIR': '/run/user/1000', 'LANG': 'en_US.UTF-8', 'LS_COLORS': 'rs=0:di=01;34:ln=01;36:mh=00:pi=40;33:so=01;35:do=01;35:bd=40;33;01:cd=40;33;01:or=40;31;01:mi=00:su=37;41:sg=30;43:ca=30;41:tw=30;42:ow=34;42:st=37;44:ex=01;32:*.tar=01;31:*.tgz=01;31:*.arc=01;31:*.arj=01;31:*.taz=01;31:*.lha=01;31:*.lz4=01;31:*.lzh=01;31:*.lzma=01;31:*.tlz=01;31:*.txz=01;31:*.tzo=01;31:*.t7z=01;31:*.zip=01;31:*.z=01;31:*.dz=01;31:*.gz=01;31:*.lrz=01;31:*.lz=01;31:*.lzo=01;31:*.xz=01;31:*.zst=01;31:*.tzst=01;31:*.bz2=01;31:*.bz=01;31:*.tbz=01;31:*.tbz2=01;31:*.tz=01;31:*.deb=01;31:*.rpm=01;31:*.jar=01;31:*.war=01;31:*.ear=01;31:*.sar=01;31:*.rar=01;31:*.alz=01;31:*.ace=01;31:*.zoo=01;31:*.cpio=01;31:*.7z=01;31:*.rz=01;31:*.cab=01;31:*.wim=01;31:*.swm=01;31:*.dwm=01;31:*.esd=01;31:*.jpg=01;35:*.jpeg=01;35:*.mjpg=01;35:*.mjpeg=01;35:*.gif=01;35:*.bmp=01;35:*.pbm=01;35:*.pgm=01;35:*.ppm=01;35:*.tga=01;35:*.xbm=01;35:*.xpm=01;35:*.tif=01;35:*.tiff=01;35:*.png=01;35:*.svg=01;35:*.svgz=01;35:*.mng=01;35:*.pcx=01;35:*.mov=01;35:*.mpg=01;35:*.mpeg=01;35:*.m2v=01;35:*.mkv=01;35:*.webm=01;35:*.webp=01;35:*.ogm=01;35:*.mp4=01;35:*.m4v=01;35:*.mp4v=01;35:*.vob=01;35:*.qt=01;35:*.nuv=01;35:*.wmv=01;35:*.asf=01;35:*.rm=01;35:*.rmvb=01;35:*.flc=01;35:*.avi=01;35:*.fli=01;35:*.flv=01;35:*.gl=01;35:*.dl=01;35:*.xcf=01;35:*.xwd=01;35:*.yuv=01;35:*.cgm=01;35:*.emf=01;35:*.ogv=01;35:*.ogx=01;35:*.aac=00;36:*.au=00;36:*.flac=00;36:*.m4a=00;36:*.mid=00;36:*.midi=00;36:*.mka=00;36:*.mp3=00;36:*.mpc=00;36:*.ogg=00;36:*.ra=00;36:*.wav=00;36:*.oga=00;36:*.opus=00;36:*.spx=00;36:*.xspf=00;36:', 'AMENT_PREFIX_PATH': '/opt/ros/humble', 'SHELL': '/bin/bash', 'LESSCLOSE': '/usr/bin/lesspipe %s %s', 'PWD': '/opt/kilo7/robot/ros_ws/build/kilo_core', 'SSH_CONNECTION': '10.10.10.46 54845 10.10.10.63 22', 'XDG_DATA_DIRS': '/usr/share/gnome:/usr/local/share:/usr/share:/var/lib/snapd/desktop', 'PYTHONPATH': '/opt/kilo7/robot/ros_ws/build/kilo_core/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/opt/kilo7/robot/ros_ws/install/lib/python3.10/site-packages:/opt/ros/humble/lib/python3.10/site-packages:/opt/ros/humble/local/lib/python3.10/dist-packages', 'COLCON': '1'}, 'shell': False}
+[2.717041] (-) TimerEvent: {}
+[2.817854] (-) TimerEvent: {}
+[2.918509] (-) TimerEvent: {}
+[3.019190] (-) TimerEvent: {}
+[3.119847] (-) TimerEvent: {}
+[3.220490] (-) TimerEvent: {}
+[3.321129] (-) TimerEvent: {}
+[3.421756] (-) TimerEvent: {}
+[3.522399] (-) TimerEvent: {}
+[3.623069] (-) TimerEvent: {}
+[3.723730] (-) TimerEvent: {}
+[3.824395] (-) TimerEvent: {}
+[3.867711] (kilo_core) StdoutLine: {'line': b'running develop\n'}
+[3.924553] (-) TimerEvent: {}
+[4.025196] (-) TimerEvent: {}
+[4.125821] (-) TimerEvent: {}
+[4.226456] (-) TimerEvent: {}
+[4.327144] (-) TimerEvent: {}
+[4.427771] (-) TimerEvent: {}
+[4.528406] (-) TimerEvent: {}
+[4.571462] (kilo_core) StdoutLine: {'line': b'running egg_info\n'}
+[4.572161] (kilo_core) StdoutLine: {'line': b'creating kilo_core.egg-info\n'}
+[4.572969] (kilo_core) StdoutLine: {'line': b'writing kilo_core.egg-info/PKG-INFO\n'}
+[4.573898] (kilo_core) StdoutLine: {'line': b'writing dependency_links to kilo_core.egg-info/dependency_links.txt\n'}
+[4.575005] (kilo_core) StdoutLine: {'line': b'writing entry points to kilo_core.egg-info/entry_points.txt\n'}
+[4.575846] (kilo_core) StdoutLine: {'line': b'writing requirements to kilo_core.egg-info/requires.txt\n'}
+[4.576567] (kilo_core) StdoutLine: {'line': b'writing top-level names to kilo_core.egg-info/top_level.txt\n'}
+[4.577215] (kilo_core) StdoutLine: {'line': b"writing manifest file 'kilo_core.egg-info/SOURCES.txt'\n"}
+[4.584838] (kilo_core) StdoutLine: {'line': b"reading manifest file 'kilo_core.egg-info/SOURCES.txt'\n"}
+[4.588399] (kilo_core) StdoutLine: {'line': b"writing manifest file 'kilo_core.egg-info/SOURCES.txt'\n"}
+[4.594484] (kilo_core) StdoutLine: {'line': b'running build_ext\n'}
+[4.595539] (kilo_core) StdoutLine: {'line': b'Creating /opt/kilo7/robot/ros_ws/install/lib/python3.10/site-packages/kilo-core.egg-link (link to .)\n'}
+[4.599444] (kilo_core) StdoutLine: {'line': b'Installing control_pwm script to /opt/kilo7/robot/ros_ws/install/lib/kilo_core\n'}
+[4.600397] (kilo_core) StdoutLine: {'line': b'Installing mqtt_bridge script to /opt/kilo7/robot/ros_ws/install/lib/kilo_core\n'}
+[4.601135] (kilo_core) StdoutLine: {'line': b'Installing relay_kill script to /opt/kilo7/robot/ros_ws/install/lib/kilo_core\n'}
+[4.602061] (kilo_core) StdoutLine: {'line': b'Installing safety_gate script to /opt/kilo7/robot/ros_ws/install/lib/kilo_core\n'}
+[4.603181] (kilo_core) StdoutLine: {'line': b'\n'}
+[4.604157] (kilo_core) StdoutLine: {'line': b'Installed /opt/kilo7/robot/ros_ws/build/kilo_core\n'}
+[4.605054] (kilo_core) StdoutLine: {'line': b'running symlink_data\n'}
+[4.606007] (kilo_core) StdoutLine: {'line': b'creating /opt/kilo7/robot/ros_ws/install/share\n'}
+[4.606703] (kilo_core) StdoutLine: {'line': b'creating /opt/kilo7/robot/ros_ws/install/share/ament_index\n'}
+[4.607542] (kilo_core) StdoutLine: {'line': b'creating /opt/kilo7/robot/ros_ws/install/share/ament_index/resource_index\n'}
+[4.608499] (kilo_core) StdoutLine: {'line': b'creating /opt/kilo7/robot/ros_ws/install/share/ament_index/resource_index/packages\n'}
+[4.609202] (kilo_core) StdoutLine: {'line': b'symbolically linking /opt/kilo7/robot/ros_ws/build/kilo_core/resource/kilo_core -> /opt/kilo7/robot/ros_ws/install/share/ament_index/resource_index/packages\n'}
+[4.610108] (kilo_core) StdoutLine: {'line': b'creating /opt/kilo7/robot/ros_ws/install/share/kilo_core\n'}
+[4.610811] (kilo_core) StdoutLine: {'line': b'symbolically linking /opt/kilo7/robot/ros_ws/build/kilo_core/package.xml -> /opt/kilo7/robot/ros_ws/install/share/kilo_core\n'}
+[4.611869] (kilo_core) StdoutLine: {'line': b'creating /opt/kilo7/robot/ros_ws/install/share/kilo_core/config\n'}
+[4.612644] (kilo_core) StdoutLine: {'line': b'symbolically linking /opt/kilo7/robot/ros_ws/build/kilo_core/config/kilo.yaml -> /opt/kilo7/robot/ros_ws/install/share/kilo_core/config\n'}
+[4.614343] (kilo_core) StdoutLine: {'line': b'creating /opt/kilo7/robot/ros_ws/install/share/kilo_core/systemd\n'}
+[4.616106] (kilo_core) StdoutLine: {'line': b'symbolically linking /opt/kilo7/robot/ros_ws/build/kilo_core/systemd/kilo7-control.service -> /opt/kilo7/robot/ros_ws/install/share/kilo_core/systemd\n'}
+[4.617526] (kilo_core) StdoutLine: {'line': b'symbolically linking /opt/kilo7/robot/ros_ws/build/kilo_core/systemd/kilo7-relay-kill.service -> /opt/kilo7/robot/ros_ws/install/share/kilo_core/systemd\n'}
+[4.619279] (kilo_core) StdoutLine: {'line': b'symbolically linking /opt/kilo7/robot/ros_ws/build/kilo_core/systemd/kilo7-mqtt-bridge.service -> /opt/kilo7/robot/ros_ws/install/share/kilo_core/systemd\n'}
+[4.620727] (kilo_core) StdoutLine: {'line': b'symbolically linking /opt/kilo7/robot/ros_ws/build/kilo_core/systemd/kilo7-safety-gate.service -> /opt/kilo7/robot/ros_ws/install/share/kilo_core/systemd\n'}
+[4.622010] (kilo_core) StdoutLine: {'line': b'symbolically linking /opt/kilo7/robot/ros_ws/build/kilo_core/systemd/kilo7-backend.env -> /opt/kilo7/robot/ros_ws/install/share/kilo_core/systemd\n'}
+[4.623789] (kilo_core) StdoutLine: {'line': b'creating /opt/kilo7/robot/ros_ws/install/share/kilo_core/hook\n'}
+[4.625058] (kilo_core) StdoutLine: {'line': b'symbolically linking /opt/kilo7/robot/ros_ws/build/kilo_core/hooks/ament_prefix_path.dsv -> /opt/kilo7/robot/ros_ws/install/share/kilo_core/hook\n'}
+[4.628986] (-) TimerEvent: {}
+[4.730078] (-) TimerEvent: {}
+[4.749101] (kilo_core) CommandEnded: {'returncode': 0}
+[4.810825] (kilo_core) JobEnded: {'identifier': 'kilo_core', 'rc': 0}
+[4.813603] (-) EventReactorShutdown: {}

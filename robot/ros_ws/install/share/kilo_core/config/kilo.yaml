@@ -1,0 +1,29 @@
+build:
+  id: "KILO7_BACKEND_FINAL"
+
+mqtt:
+  host: "127.0.0.1"
+  port: 1883
+  keepalive_s: 20
+
+control:
+  cmd_ttl_ms: 250
+  hb_ttl_ms: 1000
+
+safety:
+  override_required: true
+  allow_clear_while_override: true
+
+hardware:
+  relay_mode: "mock"
+  relay_gpio_pin: 17
+  relay_kill_level_low: true
+
+pwm:
+  mode: "pigpio"
+  steer_gpio_pin: 12
+  throttle_gpio_pin: 13
+  steer_center_us: 1500
+  steer_span_us: 500
+  throttle_center_us: 1500
+  throttle_span_us: 500
