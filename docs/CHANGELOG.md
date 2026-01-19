@@ -1,14 +1,39 @@
-## 2026-01-19 ‚Äî Safety Authority Unification / One-Path Enforcement
+# Changelog
+
+## 2026-01-19 ó Repo-on-Robot Baseline (Option A) + Safe Auto-Pull
 
 ### Summary
-Eliminated a hidden dual-safety-authority condition that violated the ‚Äúone path to safety‚Äù rule. A legacy HTTP-based Safety Gate service (`kilo-safety-gate.service`) was running alongside the ROS-based Safety Gate (`kilo7-safety-gate.service`), creating the potential for forked safety truth and undefined behavior.
+Established the robot Pi as an authoritative git clone host at `/opt/kilo7` (Option A) and enabled safe automatic repo updates via a pull-only systemd timer.
+
+### Changes Made
+- `/opt/kilo7` is now a real git clone tracked to `origin/main`
+- Added safe auto-pull tool:
+  - `tools/kilo7_git_autopull.sh` (ff-only, refuses when working tree is dirty)
+- Added systemd pull automation:
+  - `kilo7-git-autopull.service` + `kilo7-git-autopull.timer`
+  - `SuccessExitStatus=3` so ìdirty tree refusalî is non-fatal (prevents log spam)
+
+### Verification
+- `git rev-parse HEAD` returns a commit hash
+- `git status --porcelain` clean during auto-pull success
+- Auto-pull logs show ìAlready up to dateî when no updates exist
+
+### Result
+Guardrails and state validation can function again because runtime and docs now derive from a verifiable repo state on the robot.
+
+---
+
+## 2026-01-19 ó Safety Authority Unification / One-Path Enforcement
+
+### Summary
+Eliminated a hidden dual-safety-authority condition that violated the ìone path to safetyî rule. A legacy HTTP-based Safety Gate service (`kilo-safety-gate.service`) could exist alongside the ROS-based Safety Gate (`kilo7-safety-gate.service`), creating potential for forked safety truth and undefined behavior.
 
 ### Problem
-Two independent safety mechanisms existed simultaneously:
+Two independent safety mechanisms could exist simultaneously:
 - **ROS Safety Gate** (`kilo7-safety-gate.service`) publishing authoritative safety truth on `/kilo/state/safety_json`
 - **Legacy HTTP Safety Gate** (`kilo-safety-gate.service`) exposing `/safety/*` endpoints on TCP 8098
 
-Even when disabled, the legacy unit could be accidentally restarted, reintroducing a second safety authority and violating the single-authoritative-path requirement.
+Even when ìdisabled,î the legacy unit could be restarted, reintroducing a second safety authority and violating the single-authoritative-path requirement.
 
 ### Changes Made
 - Fully **disabled and masked** the legacy `kilo-safety-gate.service`
@@ -17,23 +42,22 @@ Even when disabled, the legacy unit could be accidentally restarted, reintroduci
 - Reloaded systemd to enforce masking
 
 ### Verification
-- `systemctl is-enabled kilo-safety-gate.service` ‚Üí **masked**
-- `systemctl status kilo-safety-gate.service` ‚Üí **inactive (dead), masked**
-- `ss -ltnp | grep :8098` ‚Üí **no listeners**
-- MQTT retained topics confirm consistent safety state:
-  - `kilo/state/safety.safe_to_move = false`
-  - `kilo/state/control.gate_safe_to_move = false`
+- `systemctl is-enabled kilo-safety-gate.service` ? **masked**
+- `systemctl status kilo-safety-gate.service` ? **inactive (dead), masked**
+- `ss -ltnp | grep :8098` ? **no listeners**
 
 ### Result
 - Exactly **one** Safety Gate exists at runtime
-- All safety truth now flows through a single authoritative chain:
-  **Command ‚Üí Safety Gate (ROS) ‚Üí Control ‚Üí Actuators ‚Üí State**
+- All safety truth flows through a single authoritative chain:
+  **Command ? Safety Gate (ROS) ? Control ? Actuators ? State**
 - Impossible to regress into a dual-safety-authority condition without deliberate manual reversal
 
 ### Status
-‚úÖ Closed  
-This change permanently enforces the one-path safety invariant at the service layer.
-## [2026-01-19] Backend Stabilization ‚Äî MQTT Bridge UTF-8 Crash Fix
+? Closed
+
+---
+
+## 2026-01-19 ó Backend Stabilization ó MQTT Bridge UTF-8 Crash Fix
 
 ### Fixed
 - Resolved fatal UTF-8 decode error in `kilo_core/mqtt_bridge.py` caused by a non-UTF8 cp1252 character (0x96, Windows en-dash) in a docstring.
@@ -46,14 +70,14 @@ This change permanently enforces the one-path safety invariant at the service la
 - `run/kilo7-control.sh`: removed `set -u` and defensively initialized `AMENT_TRACE_SETUP_FILES` to avoid abort on unset variables.
 
 ### Verified
-- MQTT ‚Üî ROS bridge remains active and publishes state topics at expected cadence (no dropouts observed during validation window).
+- MQTT ? ROS bridge remains active and publishes state topics at expected cadence (no dropouts observed during validation window).
 - `/kilo/state/control` publishes live (non-retained) messages.
 - `/kilo/state/safety_json` and `/kilo/state/control_json` conform to the defined interface contract.
 - MQTT command topics observed and bridged as designed (no schema or topic changes introduced).
 
 ### Known Issues
-- Safety Gate (Step 1.4) correctly enforces `OVERRIDE_REQUIRED` and `EXPLICIT_STOP`.
-- `kilo/state/control` reports `gate_safe_to_move=true` while `kilo/state/safety` reports deny.
+- Safety Gate correctly enforces `OVERRIDE_REQUIRED` and `EXPLICIT_STOP`.
+- A mismatch was observed between control state and safety state during diagnosis.
 
 #### Impact
 - This mismatch can mislead downstream consumers or UI into believing motion is permitted when it is not.
@@ -62,21 +86,10 @@ This change permanently enforces the one-path safety invariant at the service la
 #### Status
 - Diagnosed only.
 - No behavioral changes implemented in this change set.
-VERSION / DATE:
-2026-01-19
 
-WHAT CHANGED:
-- Step 1.4 Safety Gate brought up as a logic-only HTTP authority service (port 8098).
-- Removed temporary override behavior by setting override_required=false after relay kill-path validation.
-- Verified deny/allow matrix: LOSS_OF_COMMAND, EXPLICIT_STOP latch, COMPONENT_MISSING, and ALLOW/NONE.
+---
 
-WHY:
-- Relay kill-path is implemented and validated in Step 1.3, so Safety Gate can operate without override debt.
-- Establish single stop authority and explicit reasons prior to building the main backend.
-
-STATUS:
-tested (logic-only, no motion)
-## 2026-01-17 ‚Äî CT-2026-01-17-RT-001 ‚Äî Hotfix: backend runtime + repeatability
+## 2026-01-17 ó CT-2026-01-17-RT-001 ó Hotfix: backend runtime + repeatability
 
 ### Fixed
 - Installed MQTT bridge dependency: `python3-paho-mqtt` (prevents `ModuleNotFoundError: No module named 'paho'`).
@@ -90,102 +103,42 @@ tested (logic-only, no motion)
 - All services run without restart loops.
 - MQTT truth topics publish valid JSON: `kilo/health`, `kilo/state/safety`, `kilo/state/control`.
 
+---
 
-CHANGE_LOG.md
-2026-01-16 ‚Äî Backend Build Plan Alignment (ROS 2 Prerequisite Gate)
+## 2026-01-16 ó Backend Build Plan Alignment (ROS 2 Prerequisite Gate)
 
-Type: Process / Build-plan correction
-Scope: Documentation + build sequencing only
-Code impact: None (backend code unchanged)
-Contract impact: None (INTERFACE_CONTRACTS v1.2 remains sealed)
+Type: Process / Build-plan correction  
+Scope: Documentation + build sequencing only  
+Code impact: None (backend code unchanged)  
+Contract impact: None (INTERFACE_CONTRACT v1.2 remains sealed)
 
-Summary
-
+### Summary
 Aligned the build plan and install flow with the finalized KILO .7 backend package, which is a ROS 2 workspace and therefore requires ROS 2 to be installed before backend installation and build.
 
 This change corrects an implicit assumption in earlier planning that backend installation could precede ROS 2 setup.
 
-What Changed
+### What Changed
+- Introduced an explicit Phase 0: ROS 2 Prerequisite Gate in the build plan.
+- Clarified that:
+  - The backend bundle is not a standalone runtime.
+  - `colcon build`, `rclpy`, and ROS environment sourcing are mandatory before backend build/install steps.
 
-Introduced an explicit Phase 0: ROS 2 Prerequisite Gate in the build plan.
+### What Did NOT Change
+- Backend code, nodes, or systemd units
+- Safety Gate semantics
+- Control loop behavior (TTL, lock, heartbeat, relay enforcement)
+- MQTT topic contracts or schemas
+- Deployment layout assumptions (`/opt/kilo7`, `kilo` user)
 
-Clarified that:
+### Rationale
+The backend README and install package already enforce ROS 2 usage (via colcon, rclpy, and ROS launch expectations). The build plan was updated to match reality, reduce install failures, and prevent ìwinging itî during setup.
 
-The backend bundle is not a standalone runtime.
-
-colcon build, rclpy, and ROS environment sourcing are mandatory before backend build/install steps.
-
-Replaced references to updating PROJECT_STATE.md during builds with:
-
-CHANGE_LOG.md / BUILD_LOG.md entries instead (PROJECT_STATE is immutable by design).
-
-What Did NOT Change
-
-Backend code, nodes, or systemd units
-
-Safety Gate semantics
-
-Control loop behavior (TTL, lock, heartbeat, relay enforcement)
-
-MQTT topic contracts or schemas
-
-Deployment layout assumptions (/opt/kilo7, kilo user)
-
-Rationale
-
-The backend README and install package already enforce ROS 2 usage (via colcon, rclpy, and ROS launch expectations). The build plan was updated to match reality, reduce install failures, and prevent ‚Äúwinging it‚Äù during setup.
-
-This keeps:
-
-Install steps deterministic
-
-Failures early and obvious
-
-Future phases (perception, mapping, navigation) aligned with the same ROS-first model
-
-Impact on Future Builds
-
+### Impact on Future Builds
 All future backend installs must pass the ROS 2 gate before proceeding.
 
-Phase sequencing is now stable for Phase 3+ work.
-
-No rework or migration is required for existing backend deployments that already have ROS 2 installed.
-
-Risk Assessment
-
-Low risk: documentation-only correction
-
+### Risk Assessment
+Low risk: documentation-only correction  
 High value: prevents invalid installs and wasted debug time
 
-No regression risk to running systems
-
-Approval / Notes
-
-PROJECT_STATE.md intentionally unchanged
-
-This change restores alignment between:
-
-Backend README
-
-Install scripts
-
-Systemd assumptions
-
-Build execution order
-
-VERSION / DATE:
-2026-01-15
-
-WHAT CHANGED:
-- Implemented Safety Gate v1 as logic-only HTTP service on port 8098.
-- Added systemd drop-in to set PYTHONPATH for reliable imports.
-- Verified acceptance checks: explicit stop latch, clear blocked under override, component fault injection, heartbeat age update.
-
-WHY:
-- Establish centralized stop authority early without permitting motion.
-- Preserve explicit safety debt: relay kill-path not implemented.
-
-STATUS:
-tested
-# Changelog
-
+### Approval / Notes
+This change restores alignment between backend README, install scripts, systemd assumptions, and build execution order.
