@@ -1,3 +1,38 @@
+## 2026-01-19 — Safety Authority Unification / One-Path Enforcement
+
+### Summary
+Eliminated a hidden dual-safety-authority condition that violated the “one path to safety” rule. A legacy HTTP-based Safety Gate service (`kilo-safety-gate.service`) was running alongside the ROS-based Safety Gate (`kilo7-safety-gate.service`), creating the potential for forked safety truth and undefined behavior.
+
+### Problem
+Two independent safety mechanisms existed simultaneously:
+- **ROS Safety Gate** (`kilo7-safety-gate.service`) publishing authoritative safety truth on `/kilo/state/safety_json`
+- **Legacy HTTP Safety Gate** (`kilo-safety-gate.service`) exposing `/safety/*` endpoints on TCP 8098
+
+Even when disabled, the legacy unit could be accidentally restarted, reintroducing a second safety authority and violating the single-authoritative-path requirement.
+
+### Changes Made
+- Fully **disabled and masked** the legacy `kilo-safety-gate.service`
+- Removed the unit file and override directory
+- Replaced the unit with a **symlink to `/dev/null`** to guarantee it cannot be started or re-enabled
+- Reloaded systemd to enforce masking
+
+### Verification
+- `systemctl is-enabled kilo-safety-gate.service` → **masked**
+- `systemctl status kilo-safety-gate.service` → **inactive (dead), masked**
+- `ss -ltnp | grep :8098` → **no listeners**
+- MQTT retained topics confirm consistent safety state:
+  - `kilo/state/safety.safe_to_move = false`
+  - `kilo/state/control.gate_safe_to_move = false`
+
+### Result
+- Exactly **one** Safety Gate exists at runtime
+- All safety truth now flows through a single authoritative chain:
+  **Command → Safety Gate (ROS) → Control → Actuators → State**
+- Impossible to regress into a dual-safety-authority condition without deliberate manual reversal
+
+### Status
+✅ Closed  
+This change permanently enforces the one-path safety invariant at the service layer.
 ## [2026-01-19] Backend Stabilization — MQTT Bridge UTF-8 Crash Fix
 
 ### Fixed
