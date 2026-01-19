@@ -1,3 +1,17 @@
+VERSION / DATE:
+2026-01-19
+
+WHAT CHANGED:
+- Step 1.4 Safety Gate brought up as a logic-only HTTP authority service (port 8098).
+- Removed temporary override behavior by setting override_required=false after relay kill-path validation.
+- Verified deny/allow matrix: LOSS_OF_COMMAND, EXPLICIT_STOP latch, COMPONENT_MISSING, and ALLOW/NONE.
+
+WHY:
+- Relay kill-path is implemented and validated in Step 1.3, so Safety Gate can operate without override debt.
+- Establish single stop authority and explicit reasons prior to building the main backend.
+
+STATUS:
+tested (logic-only, no motion)
 ## 2026-01-17 — CT-2026-01-17-RT-001 — Hotfix: backend runtime + repeatability
 
 ### Fixed
