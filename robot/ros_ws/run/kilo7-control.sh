@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 set -eo pipefail
 
+unset PYTHONPATH
+export PYTHONNOUSERSITE=1
+
 # ROS setup will reference this var even if unset; don't let bash treat it as fatal
 export AMENT_TRACE_SETUP_FILES="${AMENT_TRACE_SETUP_FILES:-}"
 
