@@ -1,3 +1,100 @@
+# CHANGE_LOG — KILO .7 (Backend)
+
+Rules:
+- Log by change ticket (CT-YYYY-MM-DD-RT-###).
+- Must include scope, impact, files changed, and verification.
+- Contract: INTERFACE_CONTRACTS — KILO .7 v1.2 (additive-only unless explicitly approved).
+
+---
+
+## CT-2026-01-20-RT-002 — Enforce install-only runtime + env sanitizer; avoid ros2run fragility
+
+Date: 2026-01-20
+Scope: Runtime execution semantics + service launch robustness (no topic/schema changes intended)
+
+Problem:
+- Backend services failed under systemd due to `ros2 run` resolving entry points via dist metadata in a fragile environment.
+- Workspace built with `--symlink-install` produced `.egg-link` into `build/`, making imports depend on build overlay leakage.
+
+Change:
+- Added environment sanitizer script to strip `ros_ws/build` paths from runtime env vars.
+- Rebuilt workspace using `colcon build --merge-install` to ensure real installed package (no egg-link).
+- Updated launch flow to run modules directly (`python3 -m kilo_core.<module>`) instead of `ros2 run`.
+
+Impact:
+- Stabilizes backend imports under systemd.
+- Enforces “install overlay only” semantics at runtime.
+- Reduces reliance on dist metadata lookup for service startup.
+- No ROS topics/schemas/authority semantics changed by this ticket.
+
+Files changed (repo):
+- robot/ros_ws/run/kilo7-sanitize-env.sh (new)
+- robot/ros_ws/run/kilo7-control.sh (updated to source sanitizer / align runtime)
+- kilo7-backend.env (updated as needed to support runtime consistency)
+- robot/ros_ws/src/kilo_core/kilo_core/relay_kill.py (fix import/runtime path handling as required)
+
+Verification:
+- `python3 -c "import kilo_core.relay_kill as m; print(m.__file__)"`
+  returns install site-packages path.
+- `systemctl is-active kilo7-relay-kill kilo7-safety-gate kilo7-mqtt-bridge kilo7-control` => active
+- `systemctl show <unit> -p ExecStart` confirms `python3 -m ...` usage.
+
+---
+
+## CT-2026-01-20-RT-003 — Stop tracking ROS build/install/log + python artifacts; tighten gitignore
+
+Date: 2026-01-20
+Scope: Repo hygiene / reproducibility (no runtime behavior change intended)
+
+Change:
+- `.gitignore` updated to permanently exclude:
+  - robot/ros_ws/build/
+  - robot/ros_ws/install/
+  - robot/ros_ws/log/
+  - python caches/artifacts (__pycache__, *.pyc, *.pyo, *.pyd, *.egg-info, *.egg-link)
+  - common tool caches (.pytest_cache, .mypy_cache, .ruff_cache, .cache)
+
+Impact:
+- Prevents accidental commits of machine-local build products.
+- Reduces “it works on my machine” drift and review noise.
+
+Files changed:
+- .gitignore
+
+Verification:
+- `git ls-files | grep -E '^robot/ros_ws/(build|install|log)/'` => none
+
+---
+
+## CT-2026-01-20-RT-004 — Canonical systemd units in repo + apply script
+
+Date: 2026-01-20
+Scope: Deployment consistency (no topic/schema changes intended)
+
+Change:
+- Added canonical unit files into repo:
+  - robot/ros_ws/run/systemd/kilo7-relay-kill.service
+  - robot/ros_ws/run/systemd/kilo7-safety-gate.service
+  - robot/ros_ws/run/systemd/kilo7-mqtt-bridge.service
+  - robot/ros_ws/run/systemd/kilo7-control.service
+- Added apply script:
+  - robot/ros_ws/run/systemd/apply-kilo7-systemd.sh
+- Units:
+  - source ROS setup + workspace install setup
+  - source sanitizer
+  - run `python3 -m kilo_core.<module>`
+  - restart=always, restartsec=1
+
+Impact:
+- Makes systemd deployment reproducible from git.
+- Eliminates host-only unit drift (single source of truth = repo).
+
+Verification:
+- Apply script installs units to `/etc/systemd/system`, daemon-reload, enable, restart.
+- `systemctl show <units> -p FragmentPath` points to `/etc/systemd/system/<unit>.service`
+- `systemctl is-active <units>` => active, `NRestarts=0` after restart.
+
+---
 # Changelog
 
 ## 2026-01-19 — Repo-on-Robot Baseline (Option A) + Safe Auto-Pull
