@@ -1,0 +1,23 @@
+[Unit]
+Description=KILO7 Safety Gate (kilo_core)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=kilo
+EnvironmentFile=-/etc/default/kilo7
+EnvironmentFile=-/opt/kilo7/kilo7-backend.env
+WorkingDirectory=/opt/kilo7
+ExecStart=/bin/bash -lc 'set -eo pipefail; \
+  source /opt/ros/humble/setup.bash; \
+  source ${KILO_ROS_WS:-/opt/kilo7/robot/ros_ws}/install/setup.bash; \
+  source /opt/kilo7/robot/ros_ws/run/kilo7-sanitize-env.sh; \
+  CMD="python3 -m kilo_core.safety_gate"; \
+  if [ -n "${KILO_CONFIG:-}" ]; then CMD="$CMD --ros-args -p config:=${KILO_CONFIG}"; fi; \
+  exec $CMD'
+Restart=always
+RestartSec=1
+
+[Install]
+WantedBy=multi-user.target
