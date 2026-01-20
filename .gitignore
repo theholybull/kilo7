@@ -1,0 +1,28 @@
+# --- ROS 2 workspace build artifacts (never track) ---
+robot/ros_ws/build/
+robot/ros_ws/install/
+robot/ros_ws/log/
+
+# --- Python junk ---
+**/__pycache__/
+**/*.pyc
+**/*.pyo
+**/*.pyd
+**/*.pytest_cache/
+**/*.mypy_cache/
+**/.ruff_cache/
+
+# --- Packaging artifacts ---
+**/*.egg-info/
+**/.eggs/
+**/dist/
+**/build/
+
+# --- IDE / OS noise ---
+.vscode/
+.idea/
+.DS_Store
+
+# --- Optional: runtime logs (if you create any under run/) ---
+robot/ros_ws/run/*.log
+robot/ros_ws/run/*.pid
