@@ -1,0 +1,26 @@
+==== ROS /kilo/phone/imu_json existence ===
+/kilo/phone/imu_json
+==== ROS /kilo/phone/imu_json info ===
+Type: std_msgs/msg/String
+
+Publisher count: 1
+
+Node name: kilo_mqtt_bridge
+Node namespace: /
+Topic type: std_msgs/msg/String
+Endpoint type: PUBLISHER
+GID: 01.0f.26.30.b4.0b.16.0f.00.00.00.00.00.00.16.03.00.00.00.00.00.00.00.00
+QoS profile:
+  Reliability: RELIABLE
+  History (Depth): UNKNOWN
+  Durability: VOLATILE
+  Lifespan: Infinite
+  Deadline: Infinite
+  Liveliness: AUTOMATIC
+  Liveliness lease duration: Infinite
+
+Subscription count: 0
+
+==== ROS /kilo/phone/imu_json echo (once) ===
+==== Publish valid phone_imu_v1 (quaternion) ===
+WARN: no imu_json message echoed

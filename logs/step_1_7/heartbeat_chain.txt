@@ -1,0 +1,18 @@
+==== MQTT heartbeat monitor (5s) ===
+kilo/cmd/heartbeat {"schema_version":"cmd_heartbeat_v1","ts_ms":1769199447653,"source":"phone"}
+kilo/cmd/heartbeat {"schema_version":"cmd_heartbeat_v1","ts_ms":1769199448154,"source":"phone"}
+kilo/cmd/heartbeat {"schema_version":"cmd_heartbeat_v1","ts_ms":1769199448654,"source":"phone"}
+kilo/cmd/heartbeat {"schema_version":"cmd_heartbeat_v1","ts_ms":1769199449154,"source":"phone"}
+kilo/cmd/heartbeat {"schema_version":"cmd_heartbeat_v1","ts_ms":1769199449654,"source":"phone"}
+kilo/cmd/heartbeat {"schema_version":"cmd_heartbeat_v1","ts_ms":1769199450153,"source":"phone"}
+kilo/cmd/heartbeat {"schema_version":"cmd_heartbeat_v1","ts_ms":1769199450653,"source":"phone"}
+kilo/cmd/heartbeat {"schema_version":"cmd_heartbeat_v1","ts_ms":1769199451155,"source":"phone"}
+kilo/cmd/heartbeat {"schema_version":"cmd_heartbeat_v1","ts_ms":1769199451659,"source":"phone"}
+kilo/cmd/heartbeat {"schema_version":"cmd_heartbeat_v1","ts_ms":1769199452158,"source":"phone"}
+==== Publish test heartbeats (2Hz for 3s, QoS1) ===
+==== ROS /kilo/cmd/heartbeat_json echo (once) ===
+data: '{"schema_version":"cmd_heartbeat_v1","ts_ms":1769199456655,"source":"phone","rx_ts_ms":1769199456708}'
+---
+==== Control state after heartbeat (once) ===
+data: '{"schema_version":"state_control_v1","ts_ms":1769199461052,"armed":false,"locked":true,"locked_reason":"HEARTBEAT_STALE","stale_...'
+---

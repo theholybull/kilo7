@@ -238,7 +238,7 @@ class ControlPWM(Node):
         out: Dict[str, Any] = {
             "schema_version": "state_control_v1",
             "ts_ms": now_ts_ms(),
-            "armed": False,
+            "armed": bool(applied_throttle != 0.0),
             "locked": bool(self._locked),
             "locked_reason": str(self._locked_reason),
             "stale_cmd": bool(self._stale_cmd),

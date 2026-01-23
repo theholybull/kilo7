@@ -186,6 +186,28 @@ Safety authority, lock, mode, and applied control truth → QoS 1
 
 High-rate non-critical telemetry → QoS 0 allowed
 
+INTENT & HEARTBEAT CADENCE (GUIDANCE — ADDITIVE)
+
+Intent (Voice/UI) — `kilo/cmd/intent` (schema: cmd_intent_v1)
+
+- Event-driven only (one-shot on user action); DO NOT publish periodically
+- QoS 1, retain=false
+- Idempotent by design; duplicates are tolerated (use `utterance_id` for correlation)
+- Optional single retry: re-publish the same payload once after ~200–500 ms for robustness
+- Debounce: suppress identical repeats for ~1 s unless `utterance_id` changes
+- STOP intent: single publish is sufficient (Safety Gate latches `EXPLICIT_STOP`); streaming STOP is forbidden
+
+Heartbeat — `kilo/cmd/heartbeat` (schema: cmd_heartbeat_v1)
+
+- Maintain liveness at 2–4 Hz (≥2 Hz recommended)
+- QoS 0 or 1, retain=false
+- `hb_ttl_ms` defines lockout threshold; current default 1000 ms implies >1 Hz required
+
+Phone IMU — `kilo/phone/imu` (schema: phone_imu_v1)
+
+- Sensor stream independent of intents; typical 4 Hz is recommended
+- QoS 0, retain=false
+
 SCHEMA EVOLUTION (DRIFT KILLER)
 
 Every payload MUST include schema_version
@@ -240,6 +262,14 @@ kilo/ui/mode_request — schema ui_mode_request_v1
 Emotion Request
 
 kilo/ui/emotion_request — schema ui_emotion_request_v1
+
+Voice Intent (Step 1.7)
+
+kilo/cmd/intent — schema cmd_intent_v1
+
+Request-only (untrusted). Event-driven voice/UI intent envelope.
+Includes: STOP, UNLOCK_REQUEST, SET_MODE, ROAM_START/STOP, MAPPING_START/STOP, STATUS.
+See "INTENT & HEARTBEAT CADENCE" for publication rules. Safety Gate remains the sole authority.
 
 Robot → Phone (Truth)
 Health

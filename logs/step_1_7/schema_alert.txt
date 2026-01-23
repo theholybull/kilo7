@@ -1,0 +1,3 @@
+==== Schema violation test ===
+Publishing WRONG_v1 intent at ts_ms=1769199473120
+kilo/alerts {"schema_version":"alert_v1","ts_ms":1769199473245,"severity":"ERROR","type":"schema_mismatch","message":"Inbound MQTT payload has wrong schema_version; dropped (no TTL refresh)","topic":"kilo/cmd/intent","expected":"cmd_intent_v1","got":"WRONG_v1"}

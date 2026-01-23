@@ -15,6 +15,9 @@ from std_msgs.msg import String
 from .util import (
     build_alert,
     get_cfg,
+    is_valid_intent_request,
+    is_valid_imu_request,
+    monotonic_s,
     load_yaml,
     now_ts_ms,
     parse_json_bytes,
@@ -48,10 +51,26 @@ MQTT_CMD_DRIVE = "kilo/cmd/drive"
 MQTT_CMD_STOP = "kilo/cmd/stop"
 MQTT_CMD_HEARTBEAT = "kilo/cmd/heartbeat"
 MQTT_CMD_UNLOCK = "kilo/cmd/unlock"
+MQTT_CMD_INTENT = "kilo/cmd/intent"
 MQTT_UI_MODE = "kilo/ui/mode_request"
 MQTT_UI_EMOTION = "kilo/ui/emotion_request"
 MQTT_PHONE_IMU = "kilo/phone/imu"
 MQTT_PHONE_GPS = "kilo/phone/gps"
+
+# Internal ROS topic for intent (added Step 1.7)
+ROS_CMD_INTENT = "/kilo/cmd/intent_json"
+
+
+# Schema version requirements for critical command topics
+# LOCKED: Step 1.6 + 1.7 Authority Chain enforcement
+MQTT_SCHEMA_REQUIREMENTS = {
+    MQTT_CMD_DRIVE: "cmd_drive_v1",
+    MQTT_CMD_STOP: "cmd_stop_v1",
+    MQTT_CMD_HEARTBEAT: "cmd_heartbeat_v1",
+    MQTT_CMD_UNLOCK: "cmd_unlock_v1",
+    MQTT_CMD_INTENT: "cmd_intent_v1",
+    MQTT_PHONE_IMU: "phone_imu_v1",
+}
 
 
 class MqttBridge(Node):
@@ -80,6 +99,7 @@ class MqttBridge(Node):
         self.pub_stop = self.create_publisher(String, ROS_CMD_STOP, 10)
         self.pub_hb = self.create_publisher(String, ROS_CMD_HEARTBEAT, 10)
         self.pub_unlock = self.create_publisher(String, ROS_CMD_UNLOCK, 10)
+        self.pub_intent = self.create_publisher(String, ROS_CMD_INTENT, 10)
         self.pub_imu = self.create_publisher(String, ROS_PHONE_IMU, 10)
         self.pub_gps = self.create_publisher(String, ROS_PHONE_GPS, 10)
         self.pub_mode = self.create_publisher(String, ROS_UI_MODE, 10)
@@ -106,6 +126,12 @@ class MqttBridge(Node):
         self._mqtt_connected = False
 
         self._health_last: Optional[Dict[str, Any]] = None
+        # Observability: count inbound MQTT messages by topic
+        self._rx_counts: Dict[str, int] = {}
+
+        # Alert rate limiting (to reduce log spam from repeated bad publishers)
+        self._alert_min_interval_s = float(get_cfg(self.cfg, "mqtt.alert_min_interval_s", 2.0))
+        self._alert_last_ts: Dict[str, float] = {}
 
         self._mqtt.connect_async(self.mqtt_host, self.mqtt_port, self.mqtt_keepalive_s)
         self._mqtt.loop_start()
@@ -127,8 +153,9 @@ class MqttBridge(Node):
         subs = [
             (MQTT_CMD_DRIVE, 0),
             (MQTT_CMD_STOP, 1),
-            (MQTT_CMD_HEARTBEAT, 0),
+            (MQTT_CMD_HEARTBEAT, 1),
             (MQTT_CMD_UNLOCK, 1),
+            (MQTT_CMD_INTENT, 1),
             (MQTT_UI_MODE, 1),
             (MQTT_UI_EMOTION, 0),
             (MQTT_PHONE_IMU, 0),
@@ -153,6 +180,11 @@ class MqttBridge(Node):
         self._publish_health_retained(ok=False, error=f"mqtt_disconnect_rc_{rc}")
 
     def _on_mqtt_msg(self, client, userdata, msg):
+        # Increment RX counter for this topic
+        try:
+            self._rx_counts[msg.topic] = int(self._rx_counts.get(msg.topic, 0)) + 1
+        except Exception:
+            pass
         obj, err = parse_json_bytes(msg.payload)
         if obj is None:
             alert = build_alert(
@@ -161,7 +193,7 @@ class MqttBridge(Node):
                 "MQTT publisher emitted non-JSON payload; dropped",
                 extra={"topic": msg.topic, "error": err or "unknown"},
             )
-            self._publish_mqtt(MQTT_ALERTS, alert, qos=1, retain=False)
+            self._emit_alert(alert)
             return
 
         # Contract: every payload MUST include ts_ms. Do not repair; drop and alert.
@@ -172,8 +204,55 @@ class MqttBridge(Node):
                 "Inbound MQTT payload missing required field ts_ms; dropped",
                 extra={"topic": msg.topic, "missing": "ts_ms"},
             )
-            self._publish_mqtt(MQTT_ALERTS, alert, qos=1, retain=False)
+            self._emit_alert(alert)
             return
+
+        # Contract: critical command topics MUST have correct schema_version.
+        # Wrong schema -> drop silently (no TTL refresh in consumer).
+        if msg.topic in MQTT_SCHEMA_REQUIREMENTS:
+            expected_schema = MQTT_SCHEMA_REQUIREMENTS[msg.topic]
+            actual_schema = obj.get("schema_version", "")
+            if actual_schema != expected_schema:
+                self.get_logger().warn(
+                    f"Schema mismatch on {msg.topic}: "
+                    f"expected={expected_schema}, got={actual_schema}; dropped"
+                )
+                # Step 1.7 observability: emit alert for schema mismatch (no TTL refresh still)
+                alert = build_alert(
+                    "ERROR",
+                    "schema_mismatch",
+                    "Inbound MQTT payload has wrong schema_version; dropped (no TTL refresh)",
+                    extra={
+                        "topic": msg.topic,
+                        "expected": expected_schema,
+                        "got": actual_schema,
+                    },
+                )
+                self._emit_alert(alert)
+                return
+
+            # Additional validation for Step 1.7 voice intent and IMU
+            if msg.topic == MQTT_CMD_INTENT:
+                if not is_valid_intent_request(obj):
+                    alert = build_alert(
+                        "ERROR",
+                        "invalid_intent_request",
+                        "Intent request failed validation (missing/invalid required fields); dropped",
+                        extra={"topic": msg.topic, "intent": obj.get("intent")},
+                    )
+                    self._emit_alert(alert)
+                    return
+
+            elif msg.topic == MQTT_PHONE_IMU:
+                if not is_valid_imu_request(obj):
+                    alert = build_alert(
+                        "ERROR",
+                        "invalid_imu_request",
+                        "IMU request failed validation (missing orientation); dropped",
+                        extra={"topic": msg.topic},
+                    )
+                    self._emit_alert(alert)
+                    return
 
         # Robot MUST NOT compute staleness from incoming ts_ms.
         # Add receipt time additively.
@@ -184,6 +263,21 @@ class MqttBridge(Node):
         ros_msg.data = s
 
         # ---- ingress fanout + observability ----
+        # Step 1.7 guardrail: optionally drop all MQTT drive requests at the bridge.
+        # This enforces the "phone sends only intents + IMU, never raw drive" rule
+        # without impacting ROS-local tests that publish to /kilo/cmd/drive_json.
+        if msg.topic == MQTT_CMD_DRIVE:
+            ignore_drive = bool(get_cfg(self.cfg, "mqtt.ignore_drive_from_mqtt", False))
+            if ignore_drive:
+                alert = build_alert(
+                    "WARN",
+                    "drive_from_mqtt_blocked",
+                    "Inbound MQTT drive request blocked by config; not forwarded to ROS",
+                    extra={"topic": msg.topic},
+                )
+                self._emit_alert(alert)
+                return
+
         if msg.topic == MQTT_CMD_DRIVE:
             now = time.time()
             if self._log_drive_every_s > 0 and (now - self._last_drive_log_ts) >= self._log_drive_every_s:
@@ -206,6 +300,13 @@ class MqttBridge(Node):
             self.pub_unlock.publish(ros_msg)
             self.get_logger().info(f"TX ROS {ROS_CMD_UNLOCK}")
 
+        elif msg.topic == MQTT_CMD_INTENT:
+            # Step 1.7: Voice intent (request only, not authority)
+            intent_str = obj.get("intent", "")
+            self.get_logger().info(f"RX MQTT intent: intent={intent_str}")
+            self.pub_intent.publish(ros_msg)
+            self.get_logger().info(f"TX ROS {ROS_CMD_INTENT}")
+
         elif msg.topic == MQTT_UI_MODE:
             self.pub_mode.publish(ros_msg)
 
@@ -213,7 +314,10 @@ class MqttBridge(Node):
             self.pub_emotion.publish(ros_msg)
 
         elif msg.topic == MQTT_PHONE_IMU:
+            # Step 1.7: Phone IMU (untrusted sensor input)
+            self.get_logger().info("RX MQTT IMU")
             self.pub_imu.publish(ros_msg)
+            self.get_logger().info(f"TX ROS {ROS_PHONE_IMU}")
 
         elif msg.topic == MQTT_PHONE_GPS:
             self.pub_gps.publish(ros_msg)
@@ -227,7 +331,7 @@ class MqttBridge(Node):
                 "MQTT message received for unhandled topic; dropped",
                 extra={"topic": msg.topic},
             )
-            self._publish_mqtt(MQTT_ALERTS, alert, qos=1, retain=False)
+            self._emit_alert(alert)
 
     # ---------------- ROS truth inbound ----------------
 
@@ -237,6 +341,27 @@ class MqttBridge(Node):
             if not self._mqtt_connected:
                 return
         self._mqtt.publish(topic, payload=payload, qos=qos, retain=retain)
+
+    def _emit_alert(self, alert_obj: Dict[str, Any]) -> None:
+        """Publish an alert to MQTT with simple rate limiting by (type, topic).
+
+        This reduces repeated log spam when a misconfigured publisher floods bad messages.
+        """
+        try:
+            typ = str(alert_obj.get("type", "unknown"))
+            topic = str(alert_obj.get("topic", ""))
+            key = f"{typ}:{topic}"
+            now = monotonic_s()
+            last = float(self._alert_last_ts.get(key, 0.0))
+            if self._alert_min_interval_s <= 0.0 or (now - last) >= self._alert_min_interval_s:
+                self._alert_last_ts[key] = now
+                self._publish_mqtt(MQTT_ALERTS, alert_obj, qos=1, retain=False)
+            else:
+                # Optionally accumulate suppressed counts in health via rx_counts
+                self._rx_counts[f"suppressed_alert:{key}"] = int(self._rx_counts.get(f"suppressed_alert:{key}", 0)) + 1
+        except Exception:
+            # Fallback: try to publish the alert without rate limit
+            self._publish_mqtt(MQTT_ALERTS, alert_obj, qos=1, retain=False)
 
     def _on_state_control(self, msg: String) -> None:
         obj = self._coerce_ros_json_or_alert(msg.data, origin_topic=ROS_STATE_CONTROL)
@@ -293,6 +418,9 @@ class MqttBridge(Node):
             "build": self.build_id,
             "uptime_s": float(uptime),
         }
+        # Add RX counters (additive-only; consumers ignore unknown fields)
+        if isinstance(self._rx_counts, dict) and self._rx_counts:
+            obj["rx_counts"] = dict(self._rx_counts)
         self._health_last = obj
         self._publish_mqtt(MQTT_HEALTH, obj, qos=1, retain=True)
 
@@ -306,6 +434,16 @@ def main() -> None:
         # systemd stop / SIGINT can trigger this; treat as clean exit
         pass
     finally:
+        # Cleanly stop MQTT network loop before tearing down ROS context
+        try:
+            if getattr(node, "_mqtt", None) is not None:
+                node._mqtt.loop_stop()
+                try:
+                    node._mqtt.disconnect()
+                except Exception:
+                    pass
+        except Exception:
+            pass
         try:
             node.destroy_node()
         except Exception:

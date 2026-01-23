@@ -1,0 +1,27 @@
+==== REPO STATE ====
+8f567fa
+-- git status --porcelain
+A  .github/copilot-instructions.md
+A  docs/AUTHORITY_CHAIN.md
+ M docs/CHANGELOG.md
+ M docs/INTERFACE_CONTRACT.md
+MM docs/PROJECT_STATE.md
+MM kilo7-backend.env
+MM robot/ros_ws/src/kilo_core/config/kilo.yaml
+M  robot/ros_ws/src/kilo_core/kilo_core/control_pwm.py
+MM robot/ros_ws/src/kilo_core/kilo_core/mqtt_bridge.py
+ M robot/ros_ws/src/kilo_core/kilo_core/relay_kill.py
+M  robot/ros_ws/src/kilo_core/kilo_core/util.py
+A  robot/test_step_1_6_invariants.py
+?? docs/STEP_1_7_IDIOT_PROOF.md
+?? logs/
+?? tools/step_1_7_verify.sh
+-- git diff --stat
+ docs/CHANGELOG.md                                  | 132 ++++++++++++++++++---
+ docs/INTERFACE_CONTRACT.md                         |  30 +++++
+ docs/PROJECT_STATE.md                              |  28 ++++-
+ kilo7-backend.env                                  |   5 +-
+ robot/ros_ws/src/kilo_core/config/kilo.yaml        |   4 +-
+ .../ros_ws/src/kilo_core/kilo_core/mqtt_bridge.py  |  87 +++++++++++++-
+ robot/ros_ws/src/kilo_core/kilo_core/relay_kill.py |  30 +++++
+ 7 files changed, 283 insertions(+), 33 deletions(-)

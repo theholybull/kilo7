@@ -118,3 +118,60 @@ def is_valid_drive_request(obj: Dict[str, Any]) -> bool:
     if not (-1.0 <= throttle <= 1.0):
         return False
     return True
+
+def is_valid_intent_request(obj: Dict[str, Any]) -> bool:
+    """Step 1.7 voice intent contract validation.
+    
+    Required:
+    - schema_version: "cmd_intent_v1" (exact)
+    - ts_ms: integer
+    - intent: string (enum: STOP, UNLOCK_REQUEST, SET_MODE, ROAM_START, ROAM_STOP, MAPPING_START, MAPPING_STOP, STATUS)
+    
+    Optional (additive):
+    - args: object
+    - utterance_id: string
+    - confidence: float [0.0, 1.0]
+    """
+    if obj.get("schema_version") != "cmd_intent_v1":
+        return False
+    if "ts_ms" not in obj:
+        return False
+    if "intent" not in obj:
+        return False
+    intent = str(obj.get("intent", "")).strip()
+    valid_intents = {
+        "STOP", "UNLOCK_REQUEST", "SET_MODE", "ROAM_START", "ROAM_STOP",
+        "MAPPING_START", "MAPPING_STOP", "STATUS"
+    }
+    if intent not in valid_intents:
+        return False
+    return True
+
+
+def is_valid_imu_request(obj: Dict[str, Any]) -> bool:
+    """Step 1.7 phone IMU contract validation.
+    
+    Required:
+    - schema_version: "phone_imu_v1" (exact)
+    - ts_ms: integer
+    - At least one orientation representation:
+      * roll, pitch, yaw (floats)
+      * OR quaternion (dict with x, y, z, w)
+      * OR accel/gyro (impl-dependent)
+    """
+    if obj.get("schema_version") != "phone_imu_v1":
+        return False
+    if "ts_ms" not in obj:
+        return False
+    
+    # At least one orientation representation must be present
+    has_euler = all(k in obj for k in ["roll", "pitch", "yaw"])
+    has_quat = isinstance(obj.get("quaternion"), dict) and all(
+        k in obj.get("quaternion", {}) for k in ["x", "y", "z", "w"]
+    )
+    has_accel_gyro = "accel" in obj or "gyro" in obj
+    
+    if not (has_euler or has_quat or has_accel_gyro):
+        return False
+    
+    return True

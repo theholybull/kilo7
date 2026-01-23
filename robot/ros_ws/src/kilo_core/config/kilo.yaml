@@ -2,9 +2,11 @@ build:
   id: "KILO7_BACKEND_FINAL"
 
 mqtt:
-  host: "127.0.0.1"
+  host: "kilo-dev.local"
   port: 1883
   keepalive_s: 20
+  ignore_drive_from_mqtt: true
+  alert_min_interval_s: 2.0
 
 control:
   cmd_ttl_ms: 250
@@ -15,9 +17,9 @@ safety:
   allow_clear_while_override: false
 
 hardware:
-  relay_mode: "mock"
+  relay_mode: "rpi_gpio"
   relay_gpio_pin: 17
-  relay_kill_level_low: true
+  relay_kill_level_low: false
 
 pwm:
   mode: "pigpio"

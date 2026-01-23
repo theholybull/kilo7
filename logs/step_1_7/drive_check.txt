@@ -1,0 +1,2 @@
+==== Drive publication check ===
+✓ PASS: no drive messages observed

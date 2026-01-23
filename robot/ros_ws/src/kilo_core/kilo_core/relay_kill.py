@@ -60,6 +60,9 @@ class RelayKill(Node):
 
         self._gpio = None
 
+        # Track last control state
+        self._last_control_json = None
+
         # NOTE: keep this conservative for now: publish always; only drive GPIO in rpi_gpio mode
         if self.mode in ("rpi_gpio", "rpi.gpio"):
             try:
@@ -89,6 +92,33 @@ class RelayKill(Node):
 
         self.pub = self.create_publisher(String, ROS_HW_RELAY_STATUS, 10)
         self.create_timer(0.1, self._tick)
+
+        # Subscribe to control authority
+        self.create_subscription(
+            String,
+            "/kilo/state/control_json",
+            self._on_control_json,
+            10,
+        )
+
+    def _on_control_json(self, msg: String) -> None:
+        try:
+            obj = json.loads(msg.data)
+        except Exception:
+            return
+        self._last_control_json = obj
+        # Only assert RUN if relay_killed is False in control_json and available
+        should_kill = True
+        reason = "NO_CONTROL_JSON"
+        if obj and self.available:
+            # If control authority says relay_killed: false, allow RUN
+            if not obj.get("relay_killed", True):
+                should_kill = False
+                reason = "CONTROL_AUTHORITY_RUN"
+            else:
+                reason = obj.get("relay_reason", "CONTROL_AUTHORITY_KILL")
+        self._apply_kill(should_kill)
+        self.relay_reason = reason
 
     def _apply_kill(self, kill: bool) -> None:
         self.relay_killed = bool(kill)

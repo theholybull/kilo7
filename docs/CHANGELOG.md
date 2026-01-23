@@ -1,13 +1,135 @@
-# CHANGE_LOG ó KILO .7 (Backend)
+# CHANGE_LOG ÔøΩ KILO .7 (Backend)
 
 Rules:
 - Log by change ticket (CT-YYYY-MM-DD-RT-###).
 - Must include scope, impact, files changed, and verification.
-- Contract: INTERFACE_CONTRACTS ó KILO .7 v1.2 (additive-only unless explicitly approved).
+- Contract: INTERFACE_CONTRACTS ÔøΩ KILO .7 v1.2 (additive-only unless explicitly approved).
 
 ---
 
-## CT-2026-01-20-RT-002 ó Enforce install-only runtime + env sanitizer; avoid ros2run fragility
+## CT-2026-01-23-RT-008 ‚Äî Rate-limit repetitive MQTT error alerts
+
+Date: 2026-01-23
+Scope: Observability stability (additive-only)
+
+Problem:
+- Misconfigured publishers can generate many repeated MQTT errors (schema mismatch, invalid payloads), causing alert log spam and making real issues harder to spot.
+
+Change:
+- Added simple rate limiting in `mqtt_bridge` for internally generated alerts on inbound MQTT errors (type+topic keyed). Defaults to 2s interval, configurable via `mqtt.alert_min_interval_s`.
+
+Impact:
+- Reduces noisy, duplicate alerts without changing any contract enforcement (messages are still dropped, TTL is not refreshed).
+- Preserves authoritative alerts from other ROS nodes (no rate limiting applied to `/kilo/alerts_json` fanout).
+
+Files changed (repo):
+- robot/ros_ws/src/kilo_core/kilo_core/mqtt_bridge.py
+- robot/ros_ws/src/kilo_core/config/kilo.yaml (optional config entry)
+
+Verification:
+- Publish repeated wrong-schema `kilo/cmd/intent` at high frequency and confirm alerts are emitted at most once per interval while drops continue.
+- Adjust interval via config and restart bridge to validate behavior.
+
+## CT-2026-01-23-RT-009 ‚Äî Heartbeat QoS hardening + graceful bridge shutdown
+
+Date: 2026-01-23
+Scope: Reliability hardening (transport + lifecycle) for Step 1.7
+
+Problem:
+- Occasional missed heartbeats over MQTT could contribute to control reporting `HEARTBEAT_STALE` under test conditions.
+- Bridge service restart sometimes produced rclpy invalid-handle/wait-set errors due to MQTT network loop still running during ROS teardown.
+
+Change:
+- Subscribed to `kilo/cmd/heartbeat` at QoS 1 in `mqtt_bridge`; forward to ROS `/kilo/cmd/heartbeat_json` unchanged except additive `rx_ts_ms`.
+- On shutdown, stop the MQTT loop and disconnect the client before destroying the ROS node and shutting down rclpy.
+
+Impact:
+- Improves delivery reliability for heartbeat messages without altering contract semantics.
+- Eliminates shutdown race that could produce spurious errors on service restarts; cleaner unit lifecycle under systemd.
+
+Files changed (repo):
+- robot/ros_ws/src/kilo_core/kilo_core/mqtt_bridge.py
+
+Verification:
+- Manual probe: publish one `cmd_heartbeat_v1` to `kilo/cmd/heartbeat` (QoS 1) and confirm ROS echo on `/kilo/cmd/heartbeat_json`.
+- Restart `kilo7-mqtt-bridge` and confirm clean logs: MQTT connected and subscriptions active; no rclpy handle/wait-set shutdown errors.
+
+## CT-2026-01-23-RT-007 ‚Äî MQTT bridge: schema-mismatch alerts + Step 1.7 verifier
+
+Date: 2026-01-23
+Scope: Additive observability for Step 1.7 + tooling
+
+Problem:
+- Critical inbound topics (intent, IMU, etc.) were dropped on schema mismatch as designed, but without alerting. Step 1.7 requires ‚Äúno silent drops‚Äù for verification and UI troubleshooting.
+
+Change:
+- `mqtt_bridge` now emits a `kilo/alerts` message when a critical-topic schema mismatch occurs (still drops and does not refresh TTL).
+- Added consolidated verification script to capture Step 1.7 artifacts to logs: `/opt/kilo7/tools/step_1_7_verify.sh`.
+
+Impact:
+- Improves observability for schema errors without altering contracts or enforcement behavior.
+- Speeds up field verification by collecting MQTT and ROS truth outputs into timestamped logs.
+
+Files changed (repo):
+- robot/ros_ws/src/kilo_core/kilo_core/mqtt_bridge.py
+- tools/step_1_7_verify.sh (new)
+
+Verification:
+- Build + restart bridge, then publish a wrong-schema intent and confirm alert:
+  - `colcon build --packages-select kilo_core`
+  - `systemctl restart kilo7-mqtt-bridge`
+  - `mosquitto_pub -t kilo/cmd/intent -m '{"schema_version":"WRONG_v1","ts_ms":$TS,"intent":"STOP"}'`
+  - Expect alert on `kilo/alerts` with `schema_mismatch`.
+- Run consolidated verifier and inspect `/opt/kilo7/logs/step_1_7/*`.
+
+Notes:
+- Behavior of TTL refresh and deny/lock semantics remains unchanged; this is strictly additive alerting.
+
+## CT-2026-01-22-RT-006 ‚Äî Interface contract: Intent cadence and QoS guidance
+
+Date: 2026-01-22
+Scope: Documentation update (additive) to INTERFACE_CONTRACT ‚Äî no schema or topic changes
+
+Change:
+- Added explicit guidance for `kilo/cmd/intent` publication cadence (event-driven, QoS 1, no retain, optional single retry, debounce) and STOP one-shot behavior.
+- Documented heartbeat cadence (2‚Äì4 Hz) and IMU stream rate (~4 Hz) with QoS/retain rules.
+- Introduced `kilo/cmd/intent` as an additive contract entry under Phone ‚Üí Robot topics for Step 1.7.
+
+Impact:
+- Clarifies producer behavior and QoS/retain expectations without altering locked interfaces.
+- Reduces ambiguity for app implementers and test harnesses.
+
+Files changed (repo):
+- docs/INTERFACE_CONTRACT.md
+
+Verification:
+- Rendered docs show the new "INTENT & HEARTBEAT CADENCE" section and the `kilo/cmd/intent` topic entry.
+
+## CT-2026-01-22-RT-005 ‚Äî MQTT bridge uses kilo-dev.local (mDNS)
+
+Date: 2026-01-22
+Scope: Runtime configuration alignment for Step 1.7 testing (no schema changes)
+
+Problem:
+- `mqtt_bridge` was connecting to `127.0.0.1`, while phone/app tests used the LAN broker via mDNS/IP.
+- This split view prevented end-to-end IMU visibility in ROS despite broker receipt.
+
+Change:
+- Updated MQTT host in config to `kilo-dev.local` (advertised via Avahi `_mqtt._tcp`).
+
+Impact:
+- Aligns bridge with the same broker used by phone/app and CLI tests.
+- Enables end-to-end verification for `cmd_intent_v1` and `phone_imu_v1`.
+
+Files changed (repo):
+- robot/ros_ws/src/kilo_core/config/kilo.yaml
+
+Verification:
+- Pending service restart: `systemctl restart kilo7-mqtt-bridge`.
+- Expect bridge logs to show `host=kilo-dev.local` and subscriptions to `kilo/cmd/intent` and `kilo/phone/imu`.
+- IMU test: publish valid `phone_imu_v1` to broker and observe `/kilo/phone/imu_json` in ROS.
+
+## CT-2026-01-20-RT-002 ÔøΩ Enforce install-only runtime + env sanitizer; avoid ros2run fragility
 
 Date: 2026-01-20
 Scope: Runtime execution semantics + service launch robustness (no topic/schema changes intended)
@@ -23,7 +145,7 @@ Change:
 
 Impact:
 - Stabilizes backend imports under systemd.
-- Enforces ìinstall overlay onlyî semantics at runtime.
+- Enforces ÔøΩinstall overlay onlyÔøΩ semantics at runtime.
 - Reduces reliance on dist metadata lookup for service startup.
 - No ROS topics/schemas/authority semantics changed by this ticket.
 
@@ -41,7 +163,7 @@ Verification:
 
 ---
 
-## CT-2026-01-20-RT-003 ó Stop tracking ROS build/install/log + python artifacts; tighten gitignore
+## CT-2026-01-20-RT-003 ÔøΩ Stop tracking ROS build/install/log + python artifacts; tighten gitignore
 
 Date: 2026-01-20
 Scope: Repo hygiene / reproducibility (no runtime behavior change intended)
@@ -56,7 +178,7 @@ Change:
 
 Impact:
 - Prevents accidental commits of machine-local build products.
-- Reduces ìit works on my machineî drift and review noise.
+- Reduces ÔøΩit works on my machineÔøΩ drift and review noise.
 
 Files changed:
 - .gitignore
@@ -66,7 +188,7 @@ Verification:
 
 ---
 
-## CT-2026-01-20-RT-004 ó Canonical systemd units in repo + apply script
+## CT-2026-01-20-RT-004 ÔøΩ Canonical systemd units in repo + apply script
 
 Date: 2026-01-20
 Scope: Deployment consistency (no topic/schema changes intended)
@@ -97,7 +219,7 @@ Verification:
 ---
 # Changelog
 
-## 2026-01-19 ó Repo-on-Robot Baseline (Option A) + Safe Auto-Pull
+## 2026-01-19 ÔøΩ Repo-on-Robot Baseline (Option A) + Safe Auto-Pull
 
 ### Summary
 Established the robot Pi as an authoritative git clone host at `/opt/kilo7` (Option A) and enabled safe automatic repo updates via a pull-only systemd timer.
@@ -108,29 +230,29 @@ Established the robot Pi as an authoritative git clone host at `/opt/kilo7` (Opt
   - `tools/kilo7_git_autopull.sh` (ff-only, refuses when working tree is dirty)
 - Added systemd pull automation:
   - `kilo7-git-autopull.service` + `kilo7-git-autopull.timer`
-  - `SuccessExitStatus=3` so ìdirty tree refusalî is non-fatal (prevents log spam)
+  - `SuccessExitStatus=3` so ÔøΩdirty tree refusalÔøΩ is non-fatal (prevents log spam)
 
 ### Verification
 - `git rev-parse HEAD` returns a commit hash
 - `git status --porcelain` clean during auto-pull success
-- Auto-pull logs show ìAlready up to dateî when no updates exist
+- Auto-pull logs show ÔøΩAlready up to dateÔøΩ when no updates exist
 
 ### Result
 Guardrails and state validation can function again because runtime and docs now derive from a verifiable repo state on the robot.
 
 ---
 
-## 2026-01-19 ó Safety Authority Unification / One-Path Enforcement
+## 2026-01-19 ÔøΩ Safety Authority Unification / One-Path Enforcement
 
 ### Summary
-Eliminated a hidden dual-safety-authority condition that violated the ìone path to safetyî rule. A legacy HTTP-based Safety Gate service (`kilo-safety-gate.service`) could exist alongside the ROS-based Safety Gate (`kilo7-safety-gate.service`), creating potential for forked safety truth and undefined behavior.
+Eliminated a hidden dual-safety-authority condition that violated the ÔøΩone path to safetyÔøΩ rule. A legacy HTTP-based Safety Gate service (`kilo-safety-gate.service`) could exist alongside the ROS-based Safety Gate (`kilo7-safety-gate.service`), creating potential for forked safety truth and undefined behavior.
 
 ### Problem
 Two independent safety mechanisms could exist simultaneously:
 - **ROS Safety Gate** (`kilo7-safety-gate.service`) publishing authoritative safety truth on `/kilo/state/safety_json`
 - **Legacy HTTP Safety Gate** (`kilo-safety-gate.service`) exposing `/safety/*` endpoints on TCP 8098
 
-Even when ìdisabled,î the legacy unit could be restarted, reintroducing a second safety authority and violating the single-authoritative-path requirement.
+Even when ÔøΩdisabled,ÔøΩ the legacy unit could be restarted, reintroducing a second safety authority and violating the single-authoritative-path requirement.
 
 ### Changes Made
 - Fully **disabled and masked** the legacy `kilo-safety-gate.service`
@@ -154,7 +276,7 @@ Even when ìdisabled,î the legacy unit could be restarted, reintroducing a second
 
 ---
 
-## 2026-01-19 ó Backend Stabilization ó MQTT Bridge UTF-8 Crash Fix
+## 2026-01-19 ÔøΩ Backend Stabilization ÔøΩ MQTT Bridge UTF-8 Crash Fix
 
 ### Fixed
 - Resolved fatal UTF-8 decode error in `kilo_core/mqtt_bridge.py` caused by a non-UTF8 cp1252 character (0x96, Windows en-dash) in a docstring.
@@ -186,7 +308,7 @@ Even when ìdisabled,î the legacy unit could be restarted, reintroducing a second
 
 ---
 
-## 2026-01-17 ó CT-2026-01-17-RT-001 ó Hotfix: backend runtime + repeatability
+## 2026-01-17 ÔøΩ CT-2026-01-17-RT-001 ÔøΩ Hotfix: backend runtime + repeatability
 
 ### Fixed
 - Installed MQTT bridge dependency: `python3-paho-mqtt` (prevents `ModuleNotFoundError: No module named 'paho'`).
@@ -202,7 +324,7 @@ Even when ìdisabled,î the legacy unit could be restarted, reintroducing a second
 
 ---
 
-## 2026-01-16 ó Backend Build Plan Alignment (ROS 2 Prerequisite Gate)
+## 2026-01-16 ÔøΩ Backend Build Plan Alignment (ROS 2 Prerequisite Gate)
 
 Type: Process / Build-plan correction  
 Scope: Documentation + build sequencing only  
@@ -228,7 +350,7 @@ This change corrects an implicit assumption in earlier planning that backend ins
 - Deployment layout assumptions (`/opt/kilo7`, `kilo` user)
 
 ### Rationale
-The backend README and install package already enforce ROS 2 usage (via colcon, rclpy, and ROS launch expectations). The build plan was updated to match reality, reduce install failures, and prevent ìwinging itî during setup.
+The backend README and install package already enforce ROS 2 usage (via colcon, rclpy, and ROS launch expectations). The build plan was updated to match reality, reduce install failures, and prevent ÔøΩwinging itÔøΩ during setup.
 
 ### Impact on Future Builds
 All future backend installs must pass the ROS 2 gate before proceeding.
