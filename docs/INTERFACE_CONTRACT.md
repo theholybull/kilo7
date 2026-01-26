@@ -216,6 +216,23 @@ Phone IMU — `kilo/phone/imu` (schema: phone_imu_v1)
 - QoS 0, retain=false
 
 SCHEMA EVOLUTION (DRIFT KILLER)
+UI EMOTION & LOCKOUT (GUIDANCE — ADDITIVE)
+
+UI derives emotion/lockout strictly from authoritative Pi truth topics:
+
+- `kilo/state/safety`: `safe_to_move`, `reason`, `latched`, `override_required`
+- `kilo/state/control`: `locked`, `locked_reason`, `relay_killed`, `relay_reason`, `applied.throttle`
+
+Rules:
+
+- Never infer emotion/lockout from request topics or transport state (e.g., MQTT connection, "command sent").
+- Suggested precedence for UI emotion: Safety `reason` (when `safe_to_move=false`) → Control `locked_reason` → `RELAY_KILLED` → `OK`.
+- UI lock condition: lock when `safe_to_move=false` OR `locked=true` OR `relay_killed=true`.
+- Motion allowed flag (intent-level): `safe_to_move && !locked && !relay_killed`.
+
+Reference helper:
+
+- `/opt/kilo7/tools/ui_truth_probe.py` prints a compact JSON suitable for UI derivation and soak tests.
 
 Every payload MUST include schema_version
 

@@ -1,0 +1,1 @@
+{"safe_to_move":true,"reason":"OK","latched":false,"override_required":true,"locked":true,"locked_reason":"HEARTBEAT_STALE","relay_killed":false,"relay_reason":"CONTROL_AUTHORITY_RUN","applied_throttle":0.0,"ui_lock":true,"ui_emotion":"HEARTBEAT_STALE","ui_motion_allowed":false}
