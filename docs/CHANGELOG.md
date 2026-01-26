@@ -83,6 +83,24 @@ Verification:
   - `python3 /opt/kilo7/tools/echo_json_once.py /kilo/state/control_json`
   - `python3 /opt/kilo7/tools/echo_json_once.py /kilo/hw/relay_status_json`
 
+## CT-2026-01-26-RT-013 — Step 1.8 prep: UI truth derivation
+
+Date: 2026-01-26
+Scope: Add tooling and guidance for UI truth mapping
+
+Change:
+- Added `tools/ui_truth_probe.py` to derive `ui_lock`, `ui_emotion`, `ui_motion_allowed` from Safety/Control truth only.
+- Added UI Emotion & Lockout guidance to `docs/INTERFACE_CONTRACT.md`.
+- Added `tools/step_1_8_soak.sh` to record derived UI truth for soak runs.
+
+Impact:
+- Locks UI semantics to authoritative topics; prepares soak validation for Step 1.8.
+
+Verification:
+- One-shot probe: `python3 /opt/kilo7/tools/ui_truth_probe.py --once`
+- Test harness: `python3 /opt/kilo7/robot/test_step_1_8_ui_truth.py`
+- Soak run: `bash /opt/kilo7/tools/step_1_8_soak.sh`
+
 ## CT-2026-01-23-RT-008 — Rate-limit repetitive MQTT error alerts
 
 Date: 2026-01-23
