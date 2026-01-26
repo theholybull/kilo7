@@ -72,6 +72,7 @@ last_cmd_age_ms: integer             (ms since last valid command)
 - `/kilo/cmd/stop_json` — Stop command (latches, can be overridden by unlock)
 - `/kilo/cmd/heartbeat_json` — Liveness proof (can expire)
 - `/kilo/cmd/unlock_json` — Override assertion (can be ignored if heartbeat stale)
+ - `/kilo/cmd/clear_stop_json` — Explicit operator request to clear `EXPLICIT_STOP` latch in Safety Gate (request, not truth). May still result in `OVERRIDE_REQUIRED` depending on config.
 
 ---
 
@@ -193,7 +194,7 @@ Expected output in control_json:
 | `kilo_core/safety_gate.py` | Publishes `/kilo/state/safety_json` (single authority) |
 | `kilo_core/control_pwm.py` | Publishes `/kilo/state/control_json` (single authority) + enforces Safety Gate truth |
 | `kilo_core/mqtt_bridge.py` | Validates and forwards requests (not authority) |
-| `kilo_core/relay_kill.py` | Publishes `/kilo/hw/relay_status_json` (supporting; not control authority) |
+| `kilo_core/relay_kill.py` | Publishes `/kilo/hw/relay_status_json` (supporting; not control authority). In rpi_gpio mode, asserts RUN when Safety Gate allows motion and Control's only lock is `RELAY_KILLED` (bootstrap release); does not make motion decisions. |
 | `kilo_core/config/kilo.yaml` | Configuration: TTLs, schema versions, thresholds |
 
 ---

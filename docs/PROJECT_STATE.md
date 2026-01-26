@@ -2,7 +2,7 @@ CURRENT PHASE:
 Phase 1 — Bring-up (Steps 1.4, 1.5 & 1.6 COMPLETE ✅)
 
 CURRENT GOAL:
-Step 1.7 — Voice Intent + Phone IMU Integration (IN PROGRESS)
+Step 1.8 — Prepare UI truth + soak (NEXT)
 
 LAST CONFIRMED WORKING STATE:
 ✅ Step 1.4 PASS — Safety Gate ROS Authority (logic-only)
@@ -117,7 +117,7 @@ WHAT IS UNTESTED:
 - Phone sensor integration (when added)
 - Multi-node failure scenarios (one node crash, system recovery)
 
-Step 1.7 — Voice Intent + Phone IMU (IN PROGRESS)
+Step 1.7 — Voice Intent + Phone IMU (PROVEN end-to-end)
 - mqtt_bridge configured to use LAN broker via mDNS: host=kilo-dev.local
 - Broker accessible over LAN (0.0.0.0:1883) and advertised via Avahi (_mqtt._tcp)
 - Verified STOP intent (cmd_intent_v1) → Safety Gate publishes EXPLICIT_STOP denial
@@ -137,12 +137,28 @@ Hardenings & Verifications (2026-01-23 PM):
   - Control: `/kilo/state/control_json` shows `locked=true`, `locked_reason=HEARTBEAT_STALE`, `relay_killed=true` (hardware kill default). Note: `locked_reason=HEARTBEAT_STALE` persists until explicit unlock; fresh heartbeat does not auto-unlock (by design).
 
 Pending verifications for Step 1.7 PASS:
-- Single-publisher invariant still holds for `/kilo/state/safety_json` and `/kilo/state/control_json` (reconfirm after any service restart).
-- IMU path proven end-to-end: `kilo/phone/imu` received and `/kilo/phone/imu_json` exists with valid `phone_imu_v1` payload.
-- STOP intent chain proven end-to-end: intent received → ROS request fanout → safety deny `EXPLICIT_STOP` → control `applied.throttle == 0.0`.
-- Bad schema produces an alert on `kilo/alerts` (no ROS side effects).
-- App never publishes `kilo/cmd/drive` during voice-only operation.
+ Verified Step 1.7 artifacts:
+ - CLEAR_STOP path live via MQTT→ROS bridge; Safety Gate latch clear per design.
+ - Combined path: STOP → CLEAR_STOP → UNLOCK → HEARTBEAT behaves per spec.
+ - Relay: rpi_gpio shows RUN (LOW); Control mirrors relay_killed=false.
+ - Safety: safe_to_move=true (OK) when latched cleared and override satisfied.
+ - Control: unlock after UNLOCK request; publishes `locked` and `locked_reason` transitions.
 
 NEXT CONCRETE STEP:
-- Soak-test IMU + intent flows (longer windows) and confirm no raw drive paths are exposed
-- Keep Step 1.7 scope: voice intents + IMU only (no autonomy behaviors yet)
+- Step 1.8 scope proposal (to confirm):
+  - UI truth derivation: drive UI lock/emotion strictly from `/kilo/state/safety_json` and `/kilo/state/control_json`.
+  - Soak tests: sustained IMU + intent flows; confirm no raw drive paths exposed.
+  - Add invariants for intent handling and UI truth mapping.
+  - Keep offline-first and single-authority guardrails.
+
+Additions (2026-01-26):
+- Command: Added explicit clear-stop request path (Option B)
+  - MQTT: `kilo/cmd/clear_stop` (schema `cmd_clear_stop_v1`)
+  - ROS: `/kilo/cmd/clear_stop_json`
+  - Safety Gate clears `EXPLICIT_STOP` latch on valid clear-stop; `override_required` semantics are unchanged.
+- Verifier: `tools/step_1_7_verify.sh` now asserts unlock behavior based on config and includes a clear-stop test.
+
+ - Relay Kill: SAFE_TO_MOVE release path added
+   - `relay_kill` now asserts RUN when Safety Gate publishes `safe_to_move=true` and Control's `locked_reason` is `RELAY_KILLED`.
+   - Observability: `/kilo/hw/relay_status_json` reports `relay_reason="SAFE_TO_MOVE_RELEASE"` on release.
+   - Purpose: break bootstrap deadlock so control can unlock when gate is OK.

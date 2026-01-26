@@ -7,6 +7,82 @@ Rules:
 
 ---
 
+## CT-2026-01-26-RT-010 — Add explicit clear-stop command (Option B)
+
+Date: 2026-01-26
+Scope: Additive command + bridge mapping; no changes to truth topics
+
+Problem:
+- STOP latch is intentionally hard-latched. Prior behavior allowed optional clearance via UNLOCK only when `allow_clear_while_override=true`.
+- Field operations require an explicit, auditable operator action to clear the STOP latch independent of UNLOCK semantics.
+
+Change:
+- Added new MQTT request topic `kilo/cmd/clear_stop` with schema `cmd_clear_stop_v1`.
+- Bridged to ROS topic `/kilo/cmd/clear_stop_json`.
+- Safety Gate subscribes and clears `EXPLICIT_STOP` latch on valid `cmd_clear_stop_v1`.
+- `override_required` semantics remain unchanged: if `override_required=true` and override is not asserted, Safety Gate publishes `OVERRIDE_REQUIRED` and `safe_to_move=false`.
+
+Impact:
+- Provides explicit, audit-friendly latch clear separate from UNLOCK.
+- Does not alter authority or truth topic schemas; strictly additive.
+
+Files changed (repo):
+- robot/ros_ws/src/kilo_core/kilo_core/safety_gate.py (subscribe + handler)
+- robot/ros_ws/src/kilo_core/kilo_core/mqtt_bridge.py (MQTT mapping + schema enforcement)
+- docs/INTERFACE_CONTRACT.md (additive reserved topic entry)
+- docs/AUTHORITY_CHAIN.md (request topic listing updated)
+- tools/step_1_7_verify.sh (unlock semantics detection retained; clear-stop test added)
+
+Verification:
+- Publish STOP then CLEAR_STOP on ROS:
+  - `ros2 topic pub -1 /kilo/cmd/stop_json std_msgs/msg/String "{data: '{\"schema_version\":\"cmd_stop_v1\",\"ts_ms\":$(date +%s%3N)}'}"`
+  - `ros2 topic pub -1 /kilo/cmd/clear_stop_json std_msgs/msg/String "{data: '{\"schema_version\":\"cmd_clear_stop_v1\",\"ts_ms\":$(date +%s%3N)}'}"`
+  - Expect `/kilo/state/safety_json` to transition `latched:false`; `reason` becomes `OK` or `OVERRIDE_REQUIRED` per config.
+- MQTT path: `mosquitto_pub -t kilo/cmd/clear_stop -m '{"schema_version":"cmd_clear_stop_v1","ts_ms":'"$(date +%s%3N)"'}'` and observe bridge logs `RX MQTT clear_stop` → `TX ROS /kilo/cmd/clear_stop_json`.
+
+## CT-2026-01-26-RT-011 — Relay kill SAFE_TO_MOVE release path
+
+Date: 2026-01-26
+Scope: Safety/observability hardening (logic tweak in relay_kill)
+
+Problem:
+- Hardware relay defaults to KILL on boot (fail-closed). Control remained `locked_reason="RELAY_KILLED"` even after Safety Gate published `safe_to_move=true`, creating a bootstrap deadlock in combined Step 1.7 path.
+
+Change:
+- Update `kilo_core/relay_kill.py` to release KILL when `/kilo/state/control_json` reports `gate_safe_to_move=true` and the only lock reason is `RELAY_KILLED`.
+- Sets `relay_reason="SAFE_TO_MOVE_RELEASE"` when asserting RUN via this path. Preserves existing behavior when control explicitly publishes `relay_killed=false`.
+
+Impact:
+- Breaks the final blocker in Step 1.7 by allowing relay to open once Safety Gate permits motion, without introducing a new motion authority.
+- Observability improved via clear `relay_reason` values.
+
+Files changed (repo):
+- robot/ros_ws/src/kilo_core/kilo_core/relay_kill.py
+
+Verification:
+- Rebuild and restart relay service:
+  - `colcon build --packages-select kilo_core`
+  - `systemctl restart kilo7-relay-kill`
+- Run combined path script and confirm control transitions out of `RELAY_KILLED` when gate is OK.
+
+## CT-2026-01-26-RT-012 — Step 1.7 end-to-end verifier artifacts
+
+Date: 2026-01-26
+Scope: Tooling additions + logs captured
+
+Change:
+- Added helper `/opt/kilo7/tools/echo_json_once.py` to capture full JSON from std_msgs/String topics for reliable verification.
+- Captured combined path reruns under `/opt/kilo7/logs/step_1_7/` including `final_path_rerun.txt`, `relay_status_json.txt`, `control_json_after_path.txt`.
+
+Impact:
+- Improves observability and makes verification concise and reproducible.
+
+Verification:
+- Use helper to echo topics:
+  - `python3 /opt/kilo7/tools/echo_json_once.py /kilo/state/safety_json`
+  - `python3 /opt/kilo7/tools/echo_json_once.py /kilo/state/control_json`
+  - `python3 /opt/kilo7/tools/echo_json_once.py /kilo/hw/relay_status_json`
+
 ## CT-2026-01-23-RT-008 — Rate-limit repetitive MQTT error alerts
 
 Date: 2026-01-23

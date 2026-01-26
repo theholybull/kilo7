@@ -54,6 +54,16 @@ fi
 set -u
 command -v ros2 >/dev/null 2>&1 || echo "WARN: ros2 not found in PATH; some checks may be skipped" | tee -a "$LOG_DIR/ros_publishers.txt"
 
+# Detect unlock/latch semantics from active config to set expectations
+CFG_FILE="/opt/kilo7/robot/ros_ws/src/kilo_core/config/kilo.yaml"
+ALLOW_CLEAR_WHILE_OVERRIDE="false"
+if [ -f "$CFG_FILE" ]; then
+  # extract boolean value; default false
+  ALLOW_CLEAR_WHILE_OVERRIDE=$(awk '/^safety:/{flag=1;next}/^[^[:space:]]/{flag=0}flag && /allow_clear_while_override/ {print $2}' "$CFG_FILE" 2>/dev/null | tr -d '\r')
+  if [ -z "$ALLOW_CLEAR_WHILE_OVERRIDE" ]; then ALLOW_CLEAR_WHILE_OVERRIDE="false"; fi
+fi
+echo "unlock_clears_stop (allow_clear_while_override): $ALLOW_CLEAR_WHILE_OVERRIDE" | tee "$LOG_DIR/config_unlock_semantics.txt"
+
 {
   echo "==== ROS TOPIC INFO: /kilo/state/safety_json ==="
   if ! ros2 topic info /kilo/state/safety_json --verbose | sed -n '1,50p'; then
@@ -188,5 +198,50 @@ PY
     echo "WARN: mosquitto_sub not found"
   fi
 } | tee "$LOG_DIR/drive_check.txt"
+
+# Unlock latch behavior check (expectations depend on config)
+{
+  echo "==== UNLOCK latch behavior check ==="
+  echo "Config allow_clear_while_override=$ALLOW_CLEAR_WHILE_OVERRIDE"
+  # Force STOP first to ensure latched baseline
+  TS=$(date +%s%3N)
+  if command -v mosquitto_pub >/dev/null 2>&1; then
+    mosquitto_pub -h "$MQTT_HOST" -p "$MQTT_PORT" -t kilo/cmd/stop -q 1 -m "{\"schema_version\":\"cmd_stop_v1\",\"ts_ms\":$TS}"
+  fi
+  sleep 0.2
+  echo "Safety (pre-unlock)"
+  timeout 3 ros2 topic echo /kilo/state/safety_json std_msgs/msg/String --once || true
+  # Publish UNLOCK via ROS directly (bypasses MQTT variability)
+  ros2 topic pub -1 /kilo/cmd/unlock_json std_msgs/msg/String "{data: '{\"schema_version\":\"cmd_unlock_v1\",\"ts_ms\":$(date +%s%3N)}'}" >/dev/null 2>&1 || true
+  sleep 0.2
+  echo "Safety (post-unlock)"
+  OUT=$(timeout 3 ros2 topic echo /kilo/state/safety_json --once 2>/dev/null || true)
+  echo "$OUT"
+  if echo "$ALLOW_CLEAR_WHILE_OVERRIDE" | grep -qi '^true$'; then
+    echo "$OUT" | grep -q '"latched":false' && echo "✓ PASS: UNLOCK cleared STOP (per config)" || echo "✗ FAIL: UNLOCK did not clear STOP though config allows it"
+  else
+    echo "$OUT" | grep -q '"latched":true' && echo "✓ PASS: UNLOCK did not clear STOP (per config)" || echo "✗ FAIL: UNLOCK cleared STOP though config forbids it"
+  fi
+} | tee "$LOG_DIR/unlock_semantics.txt"
+
+# Clear-stop behavior check (explicit operator reset)
+{
+  echo "==== CLEAR_STOP behavior check ==="
+  # Force STOP to set latched
+  TS=$(date +%s%3N)
+  if command -v ros2 >/dev/null 2>&1; then
+    ros2 topic pub -1 /kilo/cmd/stop_json std_msgs/msg/String "{data: '{\"schema_version\":\"cmd_stop_v1\",\"ts_ms\":$(date +%s%3N)}'}" >/dev/null 2>&1 || true
+  fi
+  sleep 0.2
+  echo "Safety (pre-clear-stop)"
+  timeout 3 ros2 topic echo /kilo/state/safety_json --once || true
+  # Publish CLEAR_STOP via ROS
+  ros2 topic pub -1 /kilo/cmd/clear_stop_json std_msgs/msg/String "{data: '{\"schema_version\":\"cmd_clear_stop_v1\",\"ts_ms\":$(date +%s%3N)}'}" >/dev/null 2>&1 || true
+  sleep 0.2
+  echo "Safety (post-clear-stop)"
+  OUT=$(timeout 3 ros2 topic echo /kilo/state/safety_json --once 2>/dev/null || true)
+  echo "$OUT"
+  echo "$OUT" | grep -q '"latched":false' && echo "✓ PASS: CLEAR_STOP cleared STOP latch" || echo "✗ FAIL: CLEAR_STOP did not clear STOP latch"
+} | tee "$LOG_DIR/clear_stop_semantics.txt"
 
 echo "Logs written to $LOG_DIR"

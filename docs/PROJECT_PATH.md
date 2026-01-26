@@ -15,6 +15,11 @@
 6) Navigation (recoveries)
 7) Docking/charging (last)
 
+### Step 1.8 — UI Truth + Soak (proposal)
+- Scope: finalize voice‑only interface semantics on the phone; ensure UI lock/emotion derives only from `/kilo/state/safety_json` and `/kilo/state/control_json` (no request-topic inference).
+- Tests: soak IMU + intent streams; add invariants for intent handling and UI truth mapping; verify no raw drive paths are exposed.
+- Guardrails: offline‑first, single motion authority, relay hard‑kill remains in series; no autonomy behaviors enabled by default.
+
 ## Zones
 **Green (always allowed):** stability fixes, safety, observability, field tuning of existing params, reversible refactors that reduce failure modes.  
 **Yellow (requires a ticket):** new sensors, new autonomy behaviors, comms changes, control loop changes, safety trigger changes, enabling heavy pipelines by default.  

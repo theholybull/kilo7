@@ -107,16 +107,27 @@ class RelayKill(Node):
         except Exception:
             return
         self._last_control_json = obj
-        # Only assert RUN if relay_killed is False in control_json and available
+        # Decide kill/run based on control + safety truth; default to kill.
         should_kill = True
         reason = "NO_CONTROL_JSON"
         if obj and self.available:
-            # If control authority says relay_killed: false, allow RUN
-            if not obj.get("relay_killed", True):
+            gate_ok = bool(obj.get("gate_safe_to_move", False))
+            locked = bool(obj.get("locked", True))
+            locked_reason = str(obj.get("locked_reason", ""))
+
+            # Primary release path: Safety Gate allows motion and lock is only due to relay kill.
+            # This breaks the bootstrap deadlock where relay_kill starts fail-closed.
+            if gate_ok and locked and locked_reason == "RELAY_KILLED":
+                should_kill = False
+                reason = "SAFE_TO_MOVE_RELEASE"
+            # Back-compat path: control explicitly publishes relay_killed: false
+            elif not obj.get("relay_killed", True):
                 should_kill = False
                 reason = "CONTROL_AUTHORITY_RUN"
             else:
-                reason = obj.get("relay_reason", "CONTROL_AUTHORITY_KILL")
+                # Preserve reason from control for observability when remaining killed
+                reason = str(obj.get("relay_reason", "CONTROL_AUTHORITY_KILL"))
+
         self._apply_kill(should_kill)
         self.relay_reason = reason
 

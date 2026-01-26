@@ -139,6 +139,13 @@ Reserved topic:
 kilo/cmd/unlock
 Schema: cmd_unlock_v1
 
+Explicit STOP latch reset (additive):
+
+Reserved topic:
+
+kilo/cmd/clear_stop
+Schema: cmd_clear_stop_v1
+
 Robot truth MUST include:
 
 locked_reason
@@ -254,6 +261,10 @@ kilo/cmd/heartbeat — schema cmd_heartbeat_v1
 Unlock (reserved)
 
 kilo/cmd/unlock — schema cmd_unlock_v1
+
+Clear Stop (reserved)
+
+kilo/cmd/clear_stop — schema cmd_clear_stop_v1
 
 Mode Request
 
