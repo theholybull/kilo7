@@ -7,6 +7,26 @@ Rules:
 
 ---
 
+## CT-2026-01-26 — Step 1.8: STOP dominates heartbeat stale in control
+
+Date: 2026-01-26
+Scope: Control lock-reason precedence; no schema or topic changes
+
+Change:
+- Updated Control PWM lock-reason precedence so Safety Gate latched STOP (EXPLICIT_STOP) dominates HEARTBEAT_STALE.
+- Control now caches Safety Gate latch state and reason to enforce STOP-first logic.
+- Clear-stop path remains `/kilo/cmd/clear_stop_json` (cmd_clear_stop_v1).
+
+Impact:
+- Prevents HEARTBEAT_STALE from masking STOP_REQUEST when Safety Gate is latched.
+- Improves control truth consistency during STOP scenarios.
+
+Files changed (repo):
+- robot/ros_ws/src/kilo_core/kilo_core/control_pwm.py
+
+Verification:
+- Step 1.8 acceptance checks A–D (STOP → CLEAR_STOP → HEARTBEAT; relay policy).
+
 ## CT-2026-01-26-RT-010 — Add explicit clear-stop command (Option B)
 
 Date: 2026-01-26
