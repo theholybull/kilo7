@@ -32,6 +32,34 @@ Verification:
 - Restarted systemd services.
 - Step 1.8 acceptance checks passed (clear-stop + heartbeat path; relay policy logs).
 
+## CT-2026-01-27-RT-015 — Phase 2: IMU staleness deny (Safety Gate)
+
+Date: 2026-01-27
+Scope: Safety Gate component-loss detection (IMU TTL); additive-only truth fields
+
+Change:
+- Added `safety.imu_ttl_ms` config (defaulted in config to 2000ms).
+- Safety Gate now subscribes to `/kilo/phone/imu_json`, tracks receipt time, and publishes:
+  - `imu_ok` and `imu_age_ms` in `/kilo/state/safety_json` (additive).
+- When IMU is stale beyond `imu_ttl_ms`, Safety Gate denies with `reason="COMPONENT_MISSING"`.
+- Added Step 2.3 IMU staleness integration test.
+
+Impact:
+- Robot truth explicitly reflects phone IMU staleness; Safety Gate denies motion on stale IMU.
+- Control continues to clamp throttle to 0.0 on deny.
+
+Files changed (repo):
+- robot/ros_ws/src/kilo_core/config/kilo.yaml
+- robot/ros_ws/src/kilo_core/kilo_core/safety_gate.py
+- robot/test_step_2_3_imu_stale.py
+- docs/INTERFACE_CONTRACT.md
+- docs/DECISIONS_LEDGER.md
+
+Verification:
+- `python3 robot/test_step_1_6_invariants.py` → PASS (6/6)
+- `python3 robot/test_step_1_8_ui_truth.py` → PASS (3/3)
+- `python3 robot/test_step_2_3_imu_stale.py` → PASS (after stopping mqtt_bridge to force stale)
+
 ## CT-2026-01-27-RT-014 — Cleanup: archive old install + venv purge
 
 Date: 2026-01-27

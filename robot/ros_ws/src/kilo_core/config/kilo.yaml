@@ -15,6 +15,7 @@ control:
 safety:
   override_required: true
   allow_clear_while_override: false
+  imu_ttl_ms: 2000
 
 hardware:
   relay_mode: "rpi_gpio"

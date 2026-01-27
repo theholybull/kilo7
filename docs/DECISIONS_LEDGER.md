@@ -1,4 +1,10 @@
 # Decisions Ledger (append-only)
+2026-01-27
+DECISION: Safety Gate enforces IMU staleness via imu_ttl_ms and publishes imu_ok/imu_age_ms; stale IMU denies with COMPONENT_MISSING.
+WHY: Phone IMU is a required component for Phase 2; staleness must be explicit robot truth and deny motion.
+IMPLICATIONS: Safety Gate subscribes to /kilo/phone/imu_json; control clamps on deny; additive-only fields in state_safety_v1.
+REVERSIBLE: yes (tune imu_ttl_ms or disable by setting to 0).
+
 Decisions Ledger entry (add this verbatim)
 
 Decision: ROS 2 is a hard prerequisite for the backend install package

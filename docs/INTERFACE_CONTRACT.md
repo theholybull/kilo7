@@ -214,6 +214,7 @@ Phone IMU — `kilo/phone/imu` (schema: phone_imu_v1)
 
 - Sensor stream independent of intents; typical 4 Hz is recommended
 - QoS 0, retain=false
+- Staleness is enforced by Safety Gate using `safety.imu_ttl_ms` (robot clock; additive-only)
 
 SCHEMA EVOLUTION (DRIFT KILLER)
 UI EMOTION & LOCKOUT (GUIDANCE — ADDITIVE)
@@ -337,6 +338,11 @@ Stable
 Additive-only
 
 Meaning never changes
+
+Additive fields (Phase 2):
+
+- imu_ok: bool (true if recent IMU received within imu_ttl_ms)
+- imu_age_ms: integer|null (age since last IMU receipt; computed by robot clock)
 
 Alerts
 
