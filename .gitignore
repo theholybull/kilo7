@@ -16,3 +16,12 @@ robot/ros_ws/log/
 .mypy_cache/
 .ruff_cache/
 .cache/
+
+# GIT-004: local artifacts
+.vscode/
+robot/ros_ws/src/kilo_core/build/
+robot/ros_ws/src/kilo_core/install/
+robot/ros_ws/src/kilo_core/log/
+
+# GIT-004: logs archive
+logs/step_1_8/
