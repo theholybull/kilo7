@@ -7,6 +7,24 @@ Rules:
 
 ---
 
+## CT-2026-01-27-RT-018 — Infra: rosbridge service template + visualizer doc
+
+Date: 2026-01-27
+Scope: Operational docs + systemd unit template for rosbridge (no backend code changes)
+
+Change:
+- Added systemd unit template: `robot/ros_ws/run/systemd/kilo7-rosbridge.service` for rosbridge_websocket.
+- Added visualizer setup doc: `docs/VISUALIZER.md` with install/enable/verify steps and connection details.
+
+Impact:
+- Streamlines enabling WebSocket access to ROS truth topics for offline visualizers.
+- Improves reproducibility across new machines.
+
+Verification:
+- Service enabled via systemd; port 9090 listener observed.
+- Launch attempts report "address already in use" when service active (expected).
+
+
 ## CT-2026-01-27 — Step 1.8: control lock reasons + relay policy logs
 
 Date: 2026-01-27

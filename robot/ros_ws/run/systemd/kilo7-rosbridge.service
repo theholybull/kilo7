@@ -1,0 +1,15 @@
+[Unit]
+Description=KILO7 ROSBridge WebSocket (9090)
+After=network.target
+
+[Service]
+Type=simple
+User=kilo
+WorkingDirectory=/opt/kilo7
+Environment=ROS_DISTRO=humble
+ExecStart=/bin/bash -lc 'source /opt/ros/humble/setup.bash && source /opt/kilo7/robot/ros_ws/install/setup.bash && ros2 launch rosbridge_server rosbridge_websocket_launch.xml'
+Restart=always
+RestartSec=2
+
+[Install]
+WantedBy=multi-user.target
