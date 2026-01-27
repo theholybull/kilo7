@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Step 2.4 Integration Test: Rollover detection denies motion and recovers with hysteresis.
+Step 2.5 Integration Test: Impact detection denies motion and recovers with hysteresis.
 """
 
 import json
@@ -20,9 +20,9 @@ RESET = "\033[0m"
 BOLD = "\033[1m"
 
 
-class Step24RolloverTest(Node):
+class Step25ImpactTest(Node):
     def __init__(self) -> None:
-        super().__init__("step_2_4_rollover_test")
+        super().__init__("step_2_5_impact_test")
         self.latest_safety: Optional[Dict[str, Any]] = None
         self.latest_control: Optional[Dict[str, Any]] = None
 
@@ -35,8 +35,8 @@ class Step24RolloverTest(Node):
 
         cfg_path = resolve_config_path(self, package_name="kilo_core")
         cfg = load_yaml(cfg_path)
-        self.rollover_tilt_deg = float(get_cfg(cfg, "safety.rollover_tilt_deg", 45.0))
-        self.rollover_hysteresis_deg = float(get_cfg(cfg, "safety.rollover_hysteresis_deg", 5.0))
+        self.impact_thresh = float(get_cfg(cfg, "safety.impact_accel_g_threshold", 2.0))
+        self.impact_hysteresis = float(get_cfg(cfg, "safety.impact_hysteresis_g", 0.3))
 
     def _on_safety(self, msg: String) -> None:
         try:
@@ -73,45 +73,33 @@ class Step24RolloverTest(Node):
         elif topic == "unlock":
             self.pub_unlock.publish(msg)
 
-    def _publish_imu(self, x: float, y: float, z: float, w: float) -> None:
+    def _publish_imu(self, accel_g: float) -> None:
         msg = String()
         msg.data = json.dumps(
             {
                 "schema_version": "phone_imu_v1",
                 "ts_ms": int(time.time() * 1000),
-                "quaternion": {"x": x, "y": y, "z": z, "w": w},
+                "quaternion": {"x": 0.0, "y": 0.0, "z": 0.0, "w": 1.0},
+                "accel": {"x": accel_g, "y": 0.0, "z": 0.0},
             },
             separators=(",", ":"),
         )
         self.pub_imu.publish(msg)
 
     def run(self) -> int:
-        print(f"\n{BOLD}Step 2.4 — Rollover deny + recovery{RESET}\n")
+        print(f"\n{BOLD}Step 2.5 — Impact deny + recovery{RESET}\n")
 
-        # Clear stop + assert override (if required)
         self._publish_cmd("unlock", "cmd_unlock_v1")
         self._publish_cmd("clear_stop", "cmd_clear_stop_v1")
 
-        # Publish IMU with tilt above threshold (~60 deg pitch)
+        # Publish a spike above threshold
         for _ in range(5):
-            self._publish_imu(0.5, 0.0, 0.0, 0.866)
+            self._publish_imu(self.impact_thresh + 0.5)
             rclpy.spin_once(self, timeout_sec=0.1)
 
-        if not self._wait_for(lambda: self.latest_safety is not None and self.latest_control is not None, 3.0):
-            print(f"{RED}✗ FAIL{RESET} No safety/control updates received")
-            return 1
-
-        # Wait for IMU freshness to register
-        if not self._wait_for(lambda: bool((self.latest_safety or {}).get("imu_ok", False)), 3.0):
+        if not self._wait_for(lambda: (self.latest_safety or {}).get("reason") == "IMPACT", 3.0):
             safety = self.latest_safety or {}
-            print(f"{RED}✗ FAIL{RESET} IMU not marked fresh (imu_ok false)")
-            print(f"  safety: imu_ok={safety.get('imu_ok')}, imu_age_ms={safety.get('imu_age_ms')}")
-            return 1
-
-        # Wait for rollover deny
-        if not self._wait_for(lambda: (self.latest_safety or {}).get("reason") == "ROLLOVER", 3.0):
-            safety = self.latest_safety or {}
-            print(f"{RED}✗ FAIL{RESET} expected ROLLOVER reason")
+            print(f"{RED}✗ FAIL{RESET} expected IMPACT reason")
             print(f"  safety: safe_to_move={safety.get('safe_to_move')}, reason={safety.get('reason')}")
             return 1
 
@@ -119,14 +107,16 @@ class Step24RolloverTest(Node):
         throttle = control.get("applied", {}).get("throttle", None)
         armed = bool(control.get("armed", True))
         if not (throttle == 0.0 and armed is False):
-            print(f"{RED}✗ FAIL{RESET} expected throttle clamp during rollover")
+            print(f"{RED}✗ FAIL{RESET} expected throttle clamp during impact")
             print(f"  control: throttle={throttle}, armed={armed}")
             return 1
 
-        # Publish IMU below threshold (~10 deg pitch) to recover
+        # Publish values below threshold - hysteresis to recover
+        recovery_g = max(0.0, self.impact_thresh - self.impact_hysteresis - 0.1)
         for _ in range(5):
-            self._publish_imu(0.087, 0.0, 0.0, 0.996)
+            self._publish_imu(recovery_g)
             rclpy.spin_once(self, timeout_sec=0.1)
+
         recover_reason = {"OK", "OVERRIDE_REQUIRED"}
         if not self._wait_for(lambda: (self.latest_safety or {}).get("reason") in recover_reason, 5.0):
             safety = self.latest_safety or {}
@@ -134,13 +124,13 @@ class Step24RolloverTest(Node):
             print(f"  safety: safe_to_move={safety.get('safe_to_move')}, reason={safety.get('reason')}")
             return 1
 
-        print(f"{GREEN}✓ PASS{RESET} rollover deny and recovery observed")
+        print(f"{GREEN}✓ PASS{RESET} impact deny and recovery observed")
         return 0
 
 
 def main() -> int:
     rclpy.init()
-    node = Step24RolloverTest()
+    node = Step25ImpactTest()
     try:
         return node.run()
     finally:

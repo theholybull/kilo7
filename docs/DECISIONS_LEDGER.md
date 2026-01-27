@@ -11,6 +11,12 @@ WHY: Rollover is a required Phase 2 safety trigger; must be enforced by the sing
 IMPLICATIONS: Safety Gate computes tilt from IMU, publishes imu_tilt_deg/rollover_latched, denies with reason ROLLOVER.
 REVERSIBLE: yes (tune rollover_tilt_deg / rollover_hysteresis_deg or disable by setting tilt_deg=0).
 
+2026-01-27
+DECISION: Safety Gate enforces impact detection using IMU acceleration magnitude with hysteresis; impact denies motion.
+WHY: Impact is a required Phase 2 safety trigger; must be enforced by the single authority.
+IMPLICATIONS: Safety Gate reads optional IMU accel, publishes imu_accel_g/impact_latched, denies with reason IMPACT.
+REVERSIBLE: yes (tune impact thresholds or disable by setting impact_accel_g_threshold=0).
+
 Decisions Ledger entry (add this verbatim)
 
 Decision: ROS 2 is a hard prerequisite for the backend install package

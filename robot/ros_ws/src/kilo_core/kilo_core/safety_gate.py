@@ -39,6 +39,8 @@ class SafetyGate(Node):
         self.imu_ttl_ms = int(get_cfg(cfg, "safety.imu_ttl_ms", 0))
         self.rollover_tilt_deg = float(get_cfg(cfg, "safety.rollover_tilt_deg", 0.0))
         self.rollover_hysteresis_deg = float(get_cfg(cfg, "safety.rollover_hysteresis_deg", 0.0))
+        self.impact_accel_g_threshold = float(get_cfg(cfg, "safety.impact_accel_g_threshold", 0.0))
+        self.impact_hysteresis_g = float(get_cfg(cfg, "safety.impact_hysteresis_g", 0.0))
 
         # Latched state
         self.explicit_stop = True  # safe default on boot
@@ -46,6 +48,8 @@ class SafetyGate(Node):
         self._last_imu_mono: Optional[float] = None
         self._last_imu_tilt_deg: Optional[float] = None
         self._rollover_latched = False
+        self._last_imu_accel_g: Optional[float] = None
+        self._impact_latched = False
 
         self.create_subscription(String, ROS_CMD_STOP, self._on_stop, 10)
         self.create_subscription(String, ROS_CMD_UNLOCK, self._on_unlock, 10)
@@ -120,6 +124,14 @@ class SafetyGate(Node):
         except Exception:
             self.get_logger().warn("IMU dropped: invalid_quaternion")
             return
+        accel = obj.get("accel") or {}
+        try:
+            ax = float(accel.get("x", 0.0))
+            ay = float(accel.get("y", 0.0))
+            az = float(accel.get("z", 0.0))
+            self._last_imu_accel_g = math.sqrt(ax * ax + ay * ay + az * az)
+        except Exception:
+            self._last_imu_accel_g = None
         self._last_imu_mono = time.monotonic()
 
     def _tick(self) -> None:
@@ -140,6 +152,11 @@ class SafetyGate(Node):
                 self._rollover_latched = True
             elif self._rollover_latched and self._last_imu_tilt_deg <= (self.rollover_tilt_deg - self.rollover_hysteresis_deg):
                 self._rollover_latched = False
+        if self.impact_accel_g_threshold > 0.0 and self._last_imu_accel_g is not None:
+            if not self._impact_latched and self._last_imu_accel_g >= self.impact_accel_g_threshold:
+                self._impact_latched = True
+            elif self._impact_latched and self._last_imu_accel_g <= (self.impact_accel_g_threshold - self.impact_hysteresis_g):
+                self._impact_latched = False
 
         if latched:
             safe = False
@@ -150,6 +167,9 @@ class SafetyGate(Node):
         elif self._rollover_latched:
             safe = False
             reason = "ROLLOVER"
+        elif self._impact_latched:
+            safe = False
+            reason = "IMPACT"
         elif not imu_ok:
             safe = False
             reason = "COMPONENT_MISSING"
@@ -169,6 +189,8 @@ class SafetyGate(Node):
             "imu_age_ms": imu_age_ms,
             "imu_tilt_deg": self._last_imu_tilt_deg,
             "rollover_latched": bool(self._rollover_latched),
+            "imu_accel_g": self._last_imu_accel_g,
+            "impact_latched": bool(self._impact_latched),
         }
 
         m = String()

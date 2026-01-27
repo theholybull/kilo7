@@ -87,6 +87,35 @@ Verification:
 - `python3 robot/test_step_1_8_ui_truth.py` → PASS (3/3)
 - `python3 robot/test_step_2_4_rollover.py` → PASS (mqtt_bridge stopped to isolate IMU)
 
+## CT-2026-01-27-RT-017 — Phase 2: Impact deny + recovery (Safety Gate)
+
+Date: 2026-01-27
+Scope: Safety Gate impact detection; additive-only fields
+
+Change:
+- Added `safety.impact_accel_g_threshold` and `safety.impact_hysteresis_g` config.
+- Safety Gate uses optional IMU `accel` field to detect impact and latches `IMPACT`.
+- Added impact fields in safety truth (`imu_accel_g`, `impact_latched`).
+- Added Step 2.5 impact integration test.
+
+Impact:
+- Safety Gate denies motion on impact and recovers when acceleration drops below threshold minus hysteresis.
+- Control continues to clamp throttle to 0.0 on deny.
+
+Files changed (repo):
+- robot/ros_ws/src/kilo_core/config/kilo.yaml
+- robot/ros_ws/src/kilo_core/kilo_core/safety_gate.py
+- robot/test_step_2_5_impact.py
+- docs/INTERFACE_CONTRACT.md
+- docs/DECISIONS_LEDGER.md
+
+Verification:
+- `python3 robot/test_step_1_6_invariants.py` → PASS (6/6)
+- `python3 robot/test_step_1_8_ui_truth.py` → PASS (3/3)
+- `python3 robot/test_step_2_3_imu_stale.py` → PASS
+- `python3 robot/test_step_2_4_rollover.py` → PASS
+- `python3 robot/test_step_2_5_impact.py` → PASS
+
 ## CT-2026-01-27-RT-014 — Cleanup: archive old install + venv purge
 
 Date: 2026-01-27

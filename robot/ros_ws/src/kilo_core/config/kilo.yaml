@@ -18,6 +18,8 @@ safety:
   imu_ttl_ms: 2000
   rollover_tilt_deg: 45
   rollover_hysteresis_deg: 5
+  impact_accel_g_threshold: 2.0
+  impact_hysteresis_g: 0.3
 
 hardware:
   relay_mode: "rpi_gpio"
