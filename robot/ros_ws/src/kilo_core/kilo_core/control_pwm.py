@@ -152,6 +152,12 @@ class ControlPWM(Node):
             self._locked = True
             self._locked_reason = "STOP_REQUEST"
             return
+        if not self._gate_safe_to_move:
+            self._locked = True
+            self._locked_reason = (
+                "OVERRIDE_REQUIRED" if self._gate_reason == "OVERRIDE_REQUIRED" else "GATE_BLOCKED"
+            )
+            return
         if self._heartbeat_stale():
             self._locked = True
             self._locked_reason = "HEARTBEAT_STALE"
@@ -170,8 +176,8 @@ class ControlPWM(Node):
         if obj.get("schema_version") != "state_safety_v1":
             return
         self._gate_safe_to_move = bool(obj.get("safe_to_move", False))
-        self._gate_reason = str(obj.get("reason", "UNKNOWN"))
         self._gate_latched = bool(obj.get("latched", False))
+        self._gate_reason = str(obj.get("reason", ""))
 
     def _on_relay_status(self, msg: String) -> None:
         try:
@@ -218,12 +224,16 @@ class ControlPWM(Node):
         if stop_active:
             self._locked = True
             self._locked_reason = "STOP_REQUEST"
+        elif not self._gate_safe_to_move:
+            self._locked = True
+            self._locked_reason = (
+                "OVERRIDE_REQUIRED" if self._gate_reason == "OVERRIDE_REQUIRED" else "GATE_BLOCKED"
+            )
         elif self._heartbeat_stale():
             self._locked = True
             self._locked_reason = "HEARTBEAT_STALE"
         else:
-            if self._locked_reason == "HEARTBEAT_STALE":
-                self._locked_reason = ""
+            self._locked_reason = ""
 
         applied_throttle = self._requested_throttle
         applied_steer = self._requested_steer

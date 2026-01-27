@@ -7,6 +7,31 @@ Rules:
 
 ---
 
+## CT-2026-01-27 — Step 1.8: control lock reasons + relay policy logs
+
+Date: 2026-01-27
+Scope: Control lock-reason precedence; relay policy observability; no schema or topic changes
+
+Change:
+- Fixed Control lock_reason precedence and gating semantics:
+  - STOP latch reports STOP_REQUEST (dominates over heartbeat stale).
+  - Clear-stop results in OVERRIDE_REQUIRED / GATE_BLOCKED instead of sticky STOP.
+  - Heartbeat no longer traps system in HEARTBEAT_STALE when gate is blocking.
+- Added relay_kill policy transition logging (KILL/RUN with reason) for Step 1.8 auditability.
+
+Impact:
+- Control lock reasons now reflect Safety Gate truth and do not mislabel OVERRIDE_REQUIRED as STOP.
+- Relay policy decisions are auditable from logs without requiring topic capture.
+
+Files changed (repo):
+- robot/ros_ws/src/kilo_core/kilo_core/control_pwm.py
+- robot/ros_ws/src/kilo_core/kilo_core/relay_kill.py
+
+Verification:
+- Rebuilt with colcon --merge-install.
+- Restarted systemd services.
+- Step 1.8 acceptance checks passed (clear-stop + heartbeat path; relay policy logs).
+
 ## CT-2026-01-26 — Step 1.8: STOP dominates heartbeat stale in control
 
 Date: 2026-01-26

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import os
+import time
 from typing import Any, Dict, Optional
 
 import rclpy
@@ -60,6 +61,11 @@ class RelayKill(Node):
 
         self._gpio = None
 
+        self._last_kill_state: Optional[bool] = None
+        self._last_kill_reason = ""
+        self._last_kill_log_mono = 0.0
+        self._min_kill_log_s = 1.0
+
         # Track last control state
         self._last_control_json = None
 
@@ -107,29 +113,77 @@ class RelayKill(Node):
         except Exception:
             return
         self._last_control_json = obj
-        # Decide kill/run based on control + safety truth; default to kill.
+        # Decide KILL/RUN based on control + safety truth; default to KILL (fail-open on ESC power).
         should_kill = True
         reason = "NO_CONTROL_JSON"
         if obj and self.available:
             gate_ok = bool(obj.get("gate_safe_to_move", False))
+            gate_reason = str(obj.get("gate_reason", "UNKNOWN"))
             locked = bool(obj.get("locked", True))
             locked_reason = str(obj.get("locked_reason", ""))
 
-            # Primary release path: Safety Gate allows motion and lock is only due to relay kill.
-            # This breaks the bootstrap deadlock where relay_kill starts fail-closed.
-            if gate_ok and locked and locked_reason == "RELAY_KILLED":
-                should_kill = False
-                reason = "SAFE_TO_MOVE_RELEASE"
-            # Back-compat path: control explicitly publishes relay_killed: false
-            elif not obj.get("relay_killed", True):
-                should_kill = False
-                reason = "CONTROL_AUTHORITY_RUN"
+            # Fail-OPEN invariants:
+            # - Safety denies motion (gate_ok == False)
+            # - Explicit STOP asserted by Safety Gate
+            # - Control is locked for any reason (including HEARTBEAT_STALE)
+            if not gate_ok:
+                should_kill = True
+                if gate_reason == "EXPLICIT_STOP":
+                    reason = "EXPLICIT_STOP"
+                elif gate_reason == "OVERRIDE_REQUIRED":
+                    reason = "OVERRIDE_REQUIRED"
+                else:
+                    reason = "SAFETY_DENY"
+            elif gate_reason == "EXPLICIT_STOP":
+                should_kill = True
+                reason = "EXPLICIT_STOP"
+            elif locked:
+                should_kill = True
+                # If lock explicitly due to relay, keep that reason; otherwise mark fail-open on lock
+                reason = "RELAY_KILLED" if locked_reason == "RELAY_KILLED" else "LOCKED_FAIL_OPEN"
             else:
-                # Preserve reason from control for observability when remaining killed
-                reason = str(obj.get("relay_reason", "CONTROL_AUTHORITY_KILL"))
+                # Eligible for RUN only when Safety allows and Control is unlocked.
+                # Primary release path for bootstrap: previously locked only due to RELAY_KILLED
+                should_kill = False
+                if locked_reason == "RELAY_KILLED":
+                    reason = "SAFE_TO_MOVE_RELEASE"
+                # Back-compat path: control explicitly publishes relay_killed: false
+                elif not obj.get("relay_killed", True):
+                    reason = "CONTROL_AUTHORITY_RUN"
+                else:
+                    reason = "CONTROL_AUTHORITY_RUN"
 
         self._apply_kill(should_kill)
+        self._log_kill_transition(should_kill, reason)
         self.relay_reason = reason
+
+    def _log_kill_transition(self, kill: bool, reason: str) -> None:
+        state = bool(kill)
+        reason_str = str(reason)
+        now = time.monotonic()
+
+        if self._last_kill_state is None:
+            if (now - self._last_kill_log_mono) >= self._min_kill_log_s:
+                state_label = "KILL" if state else "RUN"
+                self.get_logger().info(f"relay_state={state_label} reason={reason_str}")
+                self._last_kill_log_mono = now
+            self._last_kill_state = state
+            self._last_kill_reason = reason_str
+            return
+
+        if state == self._last_kill_state and reason_str == self._last_kill_reason:
+            return
+
+        if (now - self._last_kill_log_mono) < self._min_kill_log_s:
+            self._last_kill_state = state
+            self._last_kill_reason = reason_str
+            return
+
+        state_label = "KILL" if state else "RUN"
+        self.get_logger().info(f"relay_state={state_label} reason={reason_str}")
+        self._last_kill_log_mono = now
+        self._last_kill_state = state
+        self._last_kill_reason = reason_str
 
     def _apply_kill(self, kill: bool) -> None:
         self.relay_killed = bool(kill)

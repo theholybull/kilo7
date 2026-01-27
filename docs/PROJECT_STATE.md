@@ -2,7 +2,7 @@ CURRENT PHASE:
 Phase 1 — Bring-up (Steps 1.4, 1.5 & 1.6 COMPLETE ✅)
 
 CURRENT GOAL:
-Step 1.8 — Prepare UI truth + soak (NEXT)
+Step 1.8 — Prepare UI truth + soak (PASS, 2026-01-27, CT-2026-01-27)
 
 LAST CONFIRMED WORKING STATE:
 ✅ Step 1.4 PASS — Safety Gate ROS Authority (logic-only)
