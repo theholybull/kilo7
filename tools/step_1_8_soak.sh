@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -euo pipefail
+set -eo pipefail
 
 source /opt/ros/humble/setup.bash
 source ${KILO_ROS_WS:-/opt/kilo7/robot/ros_ws}/install/setup.bash

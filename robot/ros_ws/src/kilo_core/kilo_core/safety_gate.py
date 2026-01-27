@@ -14,6 +14,7 @@ ROS_STATE_SAFETY="/kilo/state/safety_json"
 # inbound command topics (JSON strings)
 ROS_CMD_STOP = "/kilo/cmd/stop_json"
 ROS_CMD_UNLOCK = "/kilo/cmd/unlock_json"
+ROS_CMD_CLEAR_STOP = "/kilo/cmd/clear_stop_json"
 
 
 class SafetyGate(Node):
@@ -39,6 +40,7 @@ class SafetyGate(Node):
 
         self.create_subscription(String, ROS_CMD_STOP, self._on_stop, 10)
         self.create_subscription(String, ROS_CMD_UNLOCK, self._on_unlock, 10)
+        self.create_subscription(String, ROS_CMD_CLEAR_STOP, self._on_clear_stop, 10)
 
         self.pub = self.create_publisher(String, ROS_STATE_SAFETY, 10)
         self.create_timer(0.1, self._tick)
@@ -69,6 +71,17 @@ class SafetyGate(Node):
         self._override_asserted = True
         if self.allow_clear_while_override:
             self.explicit_stop = False
+
+    def _on_clear_stop(self, msg: String) -> None:
+        obj, err = self._parse_cmd(msg.data)
+        if obj is None:
+            self.get_logger().warn(f"CLEAR_STOP dropped: {err}")
+            return
+        if obj.get("schema_version") != "cmd_clear_stop_v1":
+            self.get_logger().warn("CLEAR_STOP dropped: schema_version mismatch")
+            return
+        # Explicit operator action to clear EXPLICIT_STOP latch
+        self.explicit_stop = False
 
     def _tick(self) -> None:
         latched = bool(self.explicit_stop)

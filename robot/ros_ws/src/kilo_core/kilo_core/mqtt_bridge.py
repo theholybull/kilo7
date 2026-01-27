@@ -29,6 +29,7 @@ ROS_CMD_DRIVE = "/kilo/cmd/drive_json"
 ROS_CMD_STOP = "/kilo/cmd/stop_json"
 ROS_CMD_HEARTBEAT = "/kilo/cmd/heartbeat_json"
 ROS_CMD_UNLOCK = "/kilo/cmd/unlock_json"
+ROS_CMD_CLEAR_STOP = "/kilo/cmd/clear_stop_json"
 ROS_PHONE_IMU = "/kilo/phone/imu_json"
 ROS_PHONE_GPS = "/kilo/phone/gps_json"
 ROS_UI_MODE = "/kilo/ui/mode_request_json"
@@ -51,6 +52,7 @@ MQTT_CMD_DRIVE = "kilo/cmd/drive"
 MQTT_CMD_STOP = "kilo/cmd/stop"
 MQTT_CMD_HEARTBEAT = "kilo/cmd/heartbeat"
 MQTT_CMD_UNLOCK = "kilo/cmd/unlock"
+MQTT_CMD_CLEAR_STOP = "kilo/cmd/clear_stop"
 MQTT_CMD_INTENT = "kilo/cmd/intent"
 MQTT_UI_MODE = "kilo/ui/mode_request"
 MQTT_UI_EMOTION = "kilo/ui/emotion_request"
@@ -68,6 +70,7 @@ MQTT_SCHEMA_REQUIREMENTS = {
     MQTT_CMD_STOP: "cmd_stop_v1",
     MQTT_CMD_HEARTBEAT: "cmd_heartbeat_v1",
     MQTT_CMD_UNLOCK: "cmd_unlock_v1",
+    MQTT_CMD_CLEAR_STOP: "cmd_clear_stop_v1",
     MQTT_CMD_INTENT: "cmd_intent_v1",
     MQTT_PHONE_IMU: "phone_imu_v1",
 }
@@ -75,6 +78,14 @@ MQTT_SCHEMA_REQUIREMENTS = {
 
 class MqttBridge(Node):
     """MQTT <-> ROS JSON bridge (Phase 1-2)."""
+
+    @staticmethod
+    def _canonical_cmd(payload: Dict[str, Any]) -> Dict[str, Any]:
+        """Strip non-schema fields. Enforce canonical command shape."""
+        return {
+            "schema_version": payload.get("schema_version"),
+            "ts_ms": payload.get("ts_ms"),
+        }
 
     def __init__(self) -> None:
         super().__init__("kilo_mqtt_bridge")
@@ -99,6 +110,7 @@ class MqttBridge(Node):
         self.pub_stop = self.create_publisher(String, ROS_CMD_STOP, 10)
         self.pub_hb = self.create_publisher(String, ROS_CMD_HEARTBEAT, 10)
         self.pub_unlock = self.create_publisher(String, ROS_CMD_UNLOCK, 10)
+        self.pub_clear = self.create_publisher(String, ROS_CMD_CLEAR_STOP, 10)
         self.pub_intent = self.create_publisher(String, ROS_CMD_INTENT, 10)
         self.pub_imu = self.create_publisher(String, ROS_PHONE_IMU, 10)
         self.pub_gps = self.create_publisher(String, ROS_PHONE_GPS, 10)
@@ -155,6 +167,7 @@ class MqttBridge(Node):
             (MQTT_CMD_STOP, 1),
             (MQTT_CMD_HEARTBEAT, 1),
             (MQTT_CMD_UNLOCK, 1),
+            (MQTT_CMD_CLEAR_STOP, 1),
             (MQTT_CMD_INTENT, 1),
             (MQTT_UI_MODE, 1),
             (MQTT_UI_EMOTION, 0),
@@ -288,17 +301,29 @@ class MqttBridge(Node):
         elif msg.topic == MQTT_CMD_STOP:
             # Always log STOP
             self.get_logger().info(f"RX MQTT stop: {s}")
+            clean = self._canonical_cmd(obj)
+            ros_msg.data = json.dumps(clean, separators=(",", ":"))
             self.pub_stop.publish(ros_msg)
             self.get_logger().info(f"TX ROS {ROS_CMD_STOP}")
 
         elif msg.topic == MQTT_CMD_HEARTBEAT:
+            clean = self._canonical_cmd(obj)
+            ros_msg.data = json.dumps(clean, separators=(",", ":"))
             self.pub_hb.publish(ros_msg)
 
         elif msg.topic == MQTT_CMD_UNLOCK:
             # Always log UNLOCK
             self.get_logger().info(f"RX MQTT unlock: {s}")
+            clean = self._canonical_cmd(obj)
+            ros_msg.data = json.dumps(clean, separators=(",", ":"))
             self.pub_unlock.publish(ros_msg)
             self.get_logger().info(f"TX ROS {ROS_CMD_UNLOCK}")
+
+        elif msg.topic == MQTT_CMD_CLEAR_STOP:
+            # Explicit operator clear of STOP latch
+            self.get_logger().info(f"RX MQTT clear_stop: {s}")
+            self.pub_clear.publish(ros_msg)
+            self.get_logger().info(f"TX ROS {ROS_CMD_CLEAR_STOP}")
 
         elif msg.topic == MQTT_CMD_INTENT:
             # Step 1.7: Voice intent (request only, not authority)
