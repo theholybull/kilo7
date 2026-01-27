@@ -60,6 +60,33 @@ Verification:
 - `python3 robot/test_step_1_8_ui_truth.py` → PASS (3/3)
 - `python3 robot/test_step_2_3_imu_stale.py` → PASS (after stopping mqtt_bridge to force stale)
 
+## CT-2026-01-27-RT-016 — Phase 2: Rollover deny + recovery (Safety Gate)
+
+Date: 2026-01-27
+Scope: Safety Gate rollover detection; additive-only fields
+
+Change:
+- Added `safety.rollover_tilt_deg` and `safety.rollover_hysteresis_deg` config.
+- Safety Gate computes IMU tilt and latches `ROLLOVER` when over threshold; clears with hysteresis.
+- Added tilt/rollover fields in safety truth (`imu_tilt_deg`, `rollover_latched`).
+- Added Step 2.4 rollover integration test.
+
+Impact:
+- Safety Gate denies motion on rollover and recovers when tilt returns below threshold.
+- Control continues to clamp throttle to 0.0 when denied.
+
+Files changed (repo):
+- robot/ros_ws/src/kilo_core/config/kilo.yaml
+- robot/ros_ws/src/kilo_core/kilo_core/safety_gate.py
+- robot/test_step_2_4_rollover.py
+- docs/INTERFACE_CONTRACT.md
+- docs/DECISIONS_LEDGER.md
+
+Verification:
+- `python3 robot/test_step_1_6_invariants.py` → PASS (6/6)
+- `python3 robot/test_step_1_8_ui_truth.py` → PASS (3/3)
+- `python3 robot/test_step_2_4_rollover.py` → PASS (mqtt_bridge stopped to isolate IMU)
+
 ## CT-2026-01-27-RT-014 — Cleanup: archive old install + venv purge
 
 Date: 2026-01-27

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import math
 import time
 from typing import Any, Dict, Optional
 
@@ -36,11 +37,15 @@ class SafetyGate(Node):
         self.override_required = bool(get_cfg(cfg, "safety.override_required", True))
         self.allow_clear_while_override = bool(get_cfg(cfg, "safety.allow_clear_while_override", False))
         self.imu_ttl_ms = int(get_cfg(cfg, "safety.imu_ttl_ms", 0))
+        self.rollover_tilt_deg = float(get_cfg(cfg, "safety.rollover_tilt_deg", 0.0))
+        self.rollover_hysteresis_deg = float(get_cfg(cfg, "safety.rollover_hysteresis_deg", 0.0))
 
         # Latched state
         self.explicit_stop = True  # safe default on boot
         self._override_asserted = False
         self._last_imu_mono: Optional[float] = None
+        self._last_imu_tilt_deg: Optional[float] = None
+        self._rollover_latched = False
 
         self.create_subscription(String, ROS_CMD_STOP, self._on_stop, 10)
         self.create_subscription(String, ROS_CMD_UNLOCK, self._on_unlock, 10)
@@ -99,6 +104,22 @@ class SafetyGate(Node):
         if "ts_ms" not in obj:
             self.get_logger().warn("IMU dropped: missing_ts_ms")
             return
+        quat = obj.get("quaternion") or {}
+        try:
+            x = float(quat.get("x", 0.0))
+            y = float(quat.get("y", 0.0))
+            z = float(quat.get("z", 0.0))
+            w = float(quat.get("w", 1.0))
+            # Gravity vector (body frame), using quaternion
+            gx = 2.0 * (x * z - w * y)
+            gy = 2.0 * (w * x + y * z)
+            gz = w * w - x * x - y * y + z * z
+            gz = max(-1.0, min(1.0, gz))
+            tilt_rad = math.acos(gz)
+            self._last_imu_tilt_deg = math.degrees(tilt_rad)
+        except Exception:
+            self.get_logger().warn("IMU dropped: invalid_quaternion")
+            return
         self._last_imu_mono = time.monotonic()
 
     def _tick(self) -> None:
@@ -113,12 +134,22 @@ class SafetyGate(Node):
                 imu_age_ms = int((now_mono - self._last_imu_mono) * 1000.0)
                 imu_ok = imu_age_ms <= self.imu_ttl_ms
 
+        # Rollover detection (hysteresis)
+        if self.rollover_tilt_deg > 0.0 and self._last_imu_tilt_deg is not None:
+            if not self._rollover_latched and self._last_imu_tilt_deg >= self.rollover_tilt_deg:
+                self._rollover_latched = True
+            elif self._rollover_latched and self._last_imu_tilt_deg <= (self.rollover_tilt_deg - self.rollover_hysteresis_deg):
+                self._rollover_latched = False
+
         if latched:
             safe = False
             reason = "EXPLICIT_STOP"
         elif self.override_required and not self._override_asserted:
             safe = False
             reason = "OVERRIDE_REQUIRED"
+        elif self._rollover_latched:
+            safe = False
+            reason = "ROLLOVER"
         elif not imu_ok:
             safe = False
             reason = "COMPONENT_MISSING"
@@ -136,6 +167,8 @@ class SafetyGate(Node):
             "explicit_stop": bool(self.explicit_stop),
             "imu_ok": bool(imu_ok),
             "imu_age_ms": imu_age_ms,
+            "imu_tilt_deg": self._last_imu_tilt_deg,
+            "rollover_latched": bool(self._rollover_latched),
         }
 
         m = String()

@@ -215,6 +215,7 @@ Phone IMU — `kilo/phone/imu` (schema: phone_imu_v1)
 - Sensor stream independent of intents; typical 4 Hz is recommended
 - QoS 0, retain=false
 - Staleness is enforced by Safety Gate using `safety.imu_ttl_ms` (robot clock; additive-only)
+- Rollover detection uses `safety.rollover_tilt_deg` with hysteresis `safety.rollover_hysteresis_deg`
 
 SCHEMA EVOLUTION (DRIFT KILLER)
 UI EMOTION & LOCKOUT (GUIDANCE — ADDITIVE)
@@ -339,10 +340,16 @@ Additive-only
 
 Meaning never changes
 
+Additive reason codes (Phase 2):
+
+- ROLLOVER
+
 Additive fields (Phase 2):
 
 - imu_ok: bool (true if recent IMU received within imu_ttl_ms)
 - imu_age_ms: integer|null (age since last IMU receipt; computed by robot clock)
+- imu_tilt_deg: number|null (tilt angle from upright, degrees)
+- rollover_latched: bool (true if rollover detected, with hysteresis)
 
 Alerts
 

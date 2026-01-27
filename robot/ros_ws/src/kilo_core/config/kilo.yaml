@@ -16,6 +16,8 @@ safety:
   override_required: true
   allow_clear_while_override: false
   imu_ttl_ms: 2000
+  rollover_tilt_deg: 45
+  rollover_hysteresis_deg: 5
 
 hardware:
   relay_mode: "rpi_gpio"

@@ -5,6 +5,12 @@ WHY: Phone IMU is a required component for Phase 2; staleness must be explicit r
 IMPLICATIONS: Safety Gate subscribes to /kilo/phone/imu_json; control clamps on deny; additive-only fields in state_safety_v1.
 REVERSIBLE: yes (tune imu_ttl_ms or disable by setting to 0).
 
+2026-01-27
+DECISION: Safety Gate enforces rollover detection using IMU tilt with hysteresis; rollover denies motion.
+WHY: Rollover is a required Phase 2 safety trigger; must be enforced by the single authority.
+IMPLICATIONS: Safety Gate computes tilt from IMU, publishes imu_tilt_deg/rollover_latched, denies with reason ROLLOVER.
+REVERSIBLE: yes (tune rollover_tilt_deg / rollover_hysteresis_deg or disable by setting tilt_deg=0).
+
 Decisions Ledger entry (add this verbatim)
 
 Decision: ROS 2 is a hard prerequisite for the backend install package
