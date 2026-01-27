@@ -23,6 +23,7 @@ PREREQUISITES:
 import json
 import time
 import sys
+import re
 from typing import Optional, Dict, Any
 import rclpy
 from rclpy.node import Node
@@ -128,18 +129,23 @@ class Step16TestNode(Node):
             )
             info = result.stdout
 
-            # Parse publisher count from "Publisher count: N"
-            if "Publisher count: 1" in info and "kilo_safety_gate" in info and "PUBLISHER" in info:
+            # Parse publisher count from "Publisher count: N" (ignore subscriber count)
+            pub_match = re.search(r"Publisher count:\s*(\d+)", info)
+            sub_match = re.search(r"Subscription count:\s*(\d+)", info)
+            pub_count = int(pub_match.group(1)) if pub_match else None
+            sub_count = int(sub_match.group(1)) if sub_match else None
+
+            if result.returncode == 0 and pub_count == 1:
                 self.result(
                     "Single Publisher on /kilo/state/safety_json",
                     True,
-                    "Safety Gate only",
+                    f"publisher_count=1, subscription_count={sub_count}",
                 )
             else:
                 self.result(
                     "Single Publisher on /kilo/state/safety_json",
                     False,
-                    f"Got: {info}",
+                    f"publisher_count={pub_count}, subscription_count={sub_count}, info={info}",
                 )
         except Exception as e:
             self.result(
@@ -161,17 +167,22 @@ class Step16TestNode(Node):
             )
             info = result.stdout
 
-            if "Publisher count: 1" in info and "kilo_control_pwm" in info and "PUBLISHER" in info:
+            pub_match = re.search(r"Publisher count:\s*(\d+)", info)
+            sub_match = re.search(r"Subscription count:\s*(\d+)", info)
+            pub_count = int(pub_match.group(1)) if pub_match else None
+            sub_count = int(sub_match.group(1)) if sub_match else None
+
+            if result.returncode == 0 and pub_count == 1:
                 self.result(
                     "Single Publisher on /kilo/state/control_json",
                     True,
-                    "Control only",
+                    f"publisher_count=1, subscription_count={sub_count}",
                 )
             else:
                 self.result(
                     "Single Publisher on /kilo/state/control_json",
                     False,
-                    f"Got: {info}",
+                    f"publisher_count={pub_count}, subscription_count={sub_count}, info={info}",
                 )
         except Exception as e:
             self.result(

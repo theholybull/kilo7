@@ -91,16 +91,26 @@ class UiTruthTest(Node):
             self.results.append(("Gate deny implies UI lock", False))
         else:
             self.results.append(("Gate deny implies UI lock", True))
-        # 2) If control locked, emotion reflects locked_reason.
-        if self.control.get("locked", True):
-            lr = self.control.get("locked_reason", "")
-            self.results.append(("Locked implies emotion from control", d["ui_emotion"] in (lr or "LOCKED")))
-        else:
-            self.results.append(("Locked implies emotion from control", True))
-        # 3) Motion allowed only when safe && !locked && !relay_killed.
+        # 2) Emotion precedence matches docs: safety reason -> locked_reason -> RELAY_KILLED -> OK.
         safe = bool(self.safety.get("safe_to_move", False))
+        reason = str(self.safety.get("reason", "UNKNOWN"))
         locked = bool(self.control.get("locked", True))
+        locked_reason = str(self.control.get("locked_reason", ""))
         relay_killed = bool(self.control.get("relay_killed", True))
+
+        if not safe:
+            expected_emotion = reason
+        elif locked:
+            expected_emotion = locked_reason or "LOCKED"
+        elif relay_killed:
+            expected_emotion = "RELAY_KILLED"
+        else:
+            expected_emotion = "OK"
+
+        self.results.append(
+            ("Emotion precedence safety/control/relay", d["ui_emotion"] == expected_emotion)
+        )
+        # 3) Motion allowed only when safe && !locked && !relay_killed.
         expected_allowed = (safe and not locked and not relay_killed)
         self.results.append(("Motion allowed gate/control/relay", d["ui_motion_allowed"] == expected_allowed))
 

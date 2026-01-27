@@ -75,6 +75,7 @@ class RelayKill(Node):
                 import RPi.GPIO as GPIO  # type: ignore
 
                 self._gpio = GPIO
+                GPIO.setwarnings(False)
                 GPIO.setmode(GPIO.BCM)
                 GPIO.setup(self.pin, GPIO.OUT)
                 self._apply_kill(True)
@@ -220,6 +221,10 @@ def main() -> None:
         rclpy.spin(node)
     except ExternalShutdownException:
         pass
+    except Exception as e:
+        # Suppress shutdown noise when rclpy context is already torn down.
+        if "context is not valid" not in str(e):
+            raise
     finally:
         try:
             node.destroy_node()
