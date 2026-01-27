@@ -25,3 +25,55 @@ robot/ros_ws/src/kilo_core/log/
 
 # GIT-004: logs archive
 logs/step_1_8/
+
+# GIT-004: repo-wide build/artifact ignores
+# ROS/colcon workspaces (anywhere in repo)
+**/build/
+**/install/
+**/log/
+
+# Python virtual environments (keep *.env files for config)
+.venv/
+venv/
+env/
+
+# Python virtual environments and caches (repo-wide)
+.venv/
+venv/
+**/__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.egg-info/
+
+# Python packaging / distributions
+dist/
+**/dist/
+.eggs/
+pip-wheel-metadata/
+
+# Node / frontend caches (defensive; repo currently backend-heavy)
+**/node_modules/
+**/.pnpm-store/
+**/.yarn/
+**/.turbo/
+
+# C/C++/CMake byproducts
+**/CMakeFiles/
+**/CMakeCache.txt
+**/cmake-build-*/
+**/*.o
+**/*.a
+**/*.so
+**/*.dylib
+**/*.dll
+**/*.exe
+**/*.out
+
+# Editor/OS noise
+.idea/
+*.swp
+*~
+.DS_Store
+Thumbs.db
+logs/step_1_7/
