@@ -32,6 +32,31 @@ Verification:
 - Restarted systemd services.
 - Step 1.8 acceptance checks passed (clear-stop + heartbeat path; relay policy logs).
 
+## CT-2026-01-27-RT-014 — Cleanup: archive old install + venv purge
+
+Date: 2026-01-27
+Scope: Maintenance / hygiene (no code behavior change)
+
+Change:
+- Archived and removed deprecated install `'/opt/kilo7_old_20260119_143131'`.
+- Archived and removed Python virtual environments at `'/opt/kilo7/.venv'` and `'/opt/kilo_safety_gate/venv'`.
+- Updated `.gitignore` to ignore repo-wide Python venvs and caches.
+
+Impact:
+- Eliminates confusion from duplicate installs.
+- Prevents local venvs from being committed; reduces environment drift.
+
+Files changed (repo):
+- .gitignore
+- docs/PROJECT_STATE.md (status updated)
+
+Verification:
+- Archives present under `/opt/kilo7/logs/cleanup-20260127-103113`:
+  - `kilo7_old_20260119_143131.tar.gz`
+  - `kilo7-dot-venv.tar.gz`
+  - `kilo_safety_gate-venv.tar.gz`
+- `systemctl daemon-reload` executed.
+
 ## CT-2026-01-26 — Step 1.8: STOP dominates heartbeat stale in control
 
 Date: 2026-01-26

@@ -151,14 +151,13 @@ NEXT CONCRETE STEP:
   - Add invariants for intent handling and UI truth mapping.
   - Keep offline-first and single-authority guardrails.
 
-Additions (2026-01-26):
-- Command: Added explicit clear-stop request path (Option B)
-  - MQTT: `kilo/cmd/clear_stop` (schema `cmd_clear_stop_v1`)
-  - ROS: `/kilo/cmd/clear_stop_json`
-  - Safety Gate clears `EXPLICIT_STOP` latch on valid clear-stop; `override_required` semantics are unchanged.
-- Verifier: `tools/step_1_7_verify.sh` now asserts unlock behavior based on config and includes a clear-stop test.
+Additions (2026-01-27):
+  - Cleanup completed: archived and removed old install `/opt/kilo7_old_20260119_143131` and venvs at `/opt/kilo7/.venv`.
+  - Archives stored under `/opt/kilo7/logs/cleanup-20260127-103113` (verified contents).
+  - Systemd inventory shows all `kilo7-*` units using `WorkingDirectory=/opt/kilo7`; legacy `kilo-safety-gate.service` remains masked; no stale path references (`/opt/kilo/kilo7`, `/opt/kilo7_old_*`).
+  - Tests:
+    - `robot/test_step_1_6_invariants.py` → PASS (6/6) with publisher-only checks.
+    - `robot/test_step_1_8_ui_truth.py` → PASS (3/3) aligned to documented precedence.
+  - Repo hygiene: `.gitignore` updated to ignore Python venvs and caches.
 
- - Relay Kill: SAFE_TO_MOVE release path added
-   - `relay_kill` now asserts RUN when Safety Gate publishes `safe_to_move=true` and Control's `locked_reason` is `RELAY_KILLED`.
-   - Observability: `/kilo/hw/relay_status_json` reports `relay_reason="SAFE_TO_MOVE_RELEASE"` on release.
-   - Purpose: break bootstrap deadlock so control can unlock when gate is OK.
+```
