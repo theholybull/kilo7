@@ -85,3 +85,22 @@ Verification
 
 Notes
 - Stub publishes truth for observability. Enforcement wiring remains deferred until hazards/stop metrics are available.
+
+---
+
+Date: 2026-01-28
+
+## Phase 4 — Perception Enforcement Wiring (config-gated)
+- Implemented Safety Gate wiring to perception hazards and safety_model stop distance.
+- Added config keys under `safety.perception_enforcement` (default `enabled: false`).
+- Added additive safety truth fields: `perception_ok`, `perception_age_ms`, `perception_reason`, `stop_distance_m`.
+- Added integration test `robot/test_phase4_enforcement_wiring.py` (toggles enabled/disabled).
+
+Verification
+- `python3 robot/test_phase4_enforcement_wiring.py` → PASS (disabled + enabled scenarios)
+- Existing suites: `robot/test_step_1_6_invariants.py`, `robot/test_step_1_8_ui_truth.py` → PASS
+- Logs: `logs/phase_4/20260128-113403-saf-007-pass/`
+
+Notes
+- Enforcement is opt-in by config; default behavior unchanged.
+- The Phase 4 wiring test runs Safety Gate in-process and temporarily stops systemd Safety Gate and MQTT bridge; both are restored after test.

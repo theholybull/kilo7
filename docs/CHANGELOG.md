@@ -7,6 +7,37 @@ Rules:
 
 ---
 
+## CT-2026-01-28-RT-021 — Phase 4: Perception enforcement wiring (config-gated)
+
+Date: 2026-01-28
+Scope: Safety Gate enforcement wiring to perception truth (default disabled); additive-only fields
+
+Change:
+- Added config-gated perception enforcement in Safety Gate (disabled by default).
+- Safety Gate subscribes to `/kilo/state/perception_json` and `/kilo/state/safety_model` to deny motion on:
+  - hazard level at or above `min_hazard_level`
+  - insufficient stop buffer (`stop_distance_m` < `min_stop_distance_m`)
+  - stale perception when `stale_denies=true`
+- Added additive observability fields in safety truth:
+  - `perception_ok`, `perception_age_ms`, `perception_reason`, `stop_distance_m`
+- Added Phase 4 enforcement wiring test.
+
+Impact:
+- Enforcement is behind `safety.perception_enforcement.enabled=false` by default; no behavioral change unless explicitly enabled.
+- Maintains single-authority model; Safety Gate remains the sole motion authority.
+
+Files changed (repo):
+- robot/ros_ws/src/kilo_core/kilo_core/safety_gate.py
+- robot/ros_ws/src/kilo_core/config/kilo.yaml
+- robot/test_phase4_enforcement_wiring.py
+- docs/INTERFACE_CONTRACT.md
+- docs/DECISIONS_LEDGER.md
+
+Verification:
+- `python3 robot/test_step_1_6_invariants.py` → PASS
+- `python3 robot/test_step_1_8_ui_truth.py` → PASS
+- `python3 robot/test_phase4_enforcement_wiring.py` → PASS (disabled + enabled scenarios)
+
 ## CT-2026-01-27-RT-018 — Infra: rosbridge service template + visualizer doc
 
 Date: 2026-01-27

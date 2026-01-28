@@ -1,4 +1,10 @@
 # Decisions Ledger (append-only)
+2026-01-28
+DECISION: Add config-gated perception enforcement in Safety Gate (default disabled).
+WHY: Phase 3 perception truth now includes hazards/staleness; enforcement wiring must be present but opt-in.
+IMPLICATIONS: Safety Gate reads `/kilo/state/perception_json` and `/kilo/state/safety_model`, denies on PERCEPTION_HAZARD / INSUFFICIENT_STOP_BUFFER / PERCEPTION_STALE when enabled; additive-only fields in state_safety_v1.
+REVERSIBLE: yes (disable by setting safety.perception_enforcement.enabled=false).
+
 2026-01-27
 DECISION: Safety Gate enforces IMU staleness via imu_ttl_ms and publishes imu_ok/imu_age_ms; stale IMU denies with COMPONENT_MISSING.
 WHY: Phone IMU is a required component for Phase 2; staleness must be explicit robot truth and deny motion.

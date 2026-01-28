@@ -18,6 +18,8 @@ ROS_CMD_STOP = "/kilo/cmd/stop_json"
 ROS_CMD_UNLOCK = "/kilo/cmd/unlock_json"
 ROS_CMD_CLEAR_STOP = "/kilo/cmd/clear_stop_json"
 ROS_PHONE_IMU = "/kilo/phone/imu_json"
+ROS_STATE_PERCEPTION = "/kilo/state/perception_json"
+ROS_STATE_SAFETY_MODEL = "/kilo/state/safety_model"
 
 
 class SafetyGate(Node):
@@ -41,6 +43,16 @@ class SafetyGate(Node):
         self.rollover_hysteresis_deg = float(get_cfg(cfg, "safety.rollover_hysteresis_deg", 0.0))
         self.impact_accel_g_threshold = float(get_cfg(cfg, "safety.impact_accel_g_threshold", 0.0))
         self.impact_hysteresis_g = float(get_cfg(cfg, "safety.impact_hysteresis_g", 0.0))
+        self.perception_enabled = bool(get_cfg(cfg, "safety.perception_enforcement.enabled", False))
+        self.perception_min_hazard_level = self._normalize_hazard_level(
+            get_cfg(cfg, "safety.perception_enforcement.min_hazard_level", "CAUTION")
+        )
+        self.perception_min_stop_buffer_m = float(
+            get_cfg(cfg, "safety.perception_enforcement.min_stop_buffer_m", 0.0)
+        )
+        self.perception_stale_denies = bool(
+            get_cfg(cfg, "safety.perception_enforcement.stale_denies", True)
+        )
 
         # Latched state
         self.explicit_stop = True  # safe default on boot
@@ -51,13 +63,32 @@ class SafetyGate(Node):
         self._last_imu_accel_g: Optional[float] = None
         self._impact_latched = False
 
+        self._last_perception_mono: Optional[float] = None
+        self._perception_hazard_level = "UNKNOWN"
+        self._perception_min_stop_distance_m: Optional[float] = None
+        self._perception_stale = False
+        self._perception_reason = ""
+
+        self._last_stop_distance_m: Optional[float] = None
+
         self.create_subscription(String, ROS_CMD_STOP, self._on_stop, 10)
         self.create_subscription(String, ROS_CMD_UNLOCK, self._on_unlock, 10)
         self.create_subscription(String, ROS_CMD_CLEAR_STOP, self._on_clear_stop, 10)
         self.create_subscription(String, ROS_PHONE_IMU, self._on_imu, 10)
+        self.create_subscription(String, ROS_STATE_PERCEPTION, self._on_perception, 10)
+        self.create_subscription(String, ROS_STATE_SAFETY_MODEL, self._on_safety_model, 10)
 
         self.pub = self.create_publisher(String, ROS_STATE_SAFETY, 10)
         self.create_timer(0.1, self._tick)
+
+    @staticmethod
+    def _normalize_hazard_level(level: Any) -> str:
+        raw = str(level or "").strip().upper()
+        if raw == "WARN":
+            raw = "CAUTION"
+        if raw == "":
+            raw = "UNKNOWN"
+        return raw
 
     def _parse_cmd(self, raw: str) -> tuple[Optional[Dict[str, Any]], Optional[str]]:
         obj, err = parse_json_bytes(raw.encode("utf-8", errors="replace"))
@@ -134,6 +165,35 @@ class SafetyGate(Node):
             self._last_imu_accel_g = None
         self._last_imu_mono = time.monotonic()
 
+    def _on_perception(self, msg: String) -> None:
+        try:
+            obj = json.loads(msg.data)
+            if not isinstance(obj, dict):
+                return
+        except Exception:
+            return
+        if obj.get("schema_version") != "state_perception_v1":
+            return
+        hazards = obj.get("hazards") if isinstance(obj.get("hazards"), dict) else {}
+        self._perception_hazard_level = self._normalize_hazard_level(hazards.get("hazard_level", "UNKNOWN"))
+        min_stop = hazards.get("min_stop_distance_m")
+        self._perception_min_stop_distance_m = float(min_stop) if isinstance(min_stop, (int, float)) else None
+        self._perception_stale = bool(obj.get("stale", False))
+        self._perception_reason = str(hazards.get("hazard_reason", "")) or str(obj.get("stale_reason", ""))
+        self._last_perception_mono = time.monotonic()
+
+    def _on_safety_model(self, msg: String) -> None:
+        try:
+            obj = json.loads(msg.data)
+            if not isinstance(obj, dict):
+                return
+        except Exception:
+            return
+        if obj.get("schema_version") != "state_safety_model_v1":
+            return
+        outputs = obj.get("outputs") if isinstance(obj.get("outputs"), dict) else {}
+        self._last_stop_distance_m = outputs.get("stop_distance_m")
+
     def _tick(self) -> None:
         latched = bool(self.explicit_stop)
         now_mono = time.monotonic()
@@ -158,6 +218,36 @@ class SafetyGate(Node):
             elif self._impact_latched and self._last_imu_accel_g <= (self.impact_accel_g_threshold - self.impact_hysteresis_g):
                 self._impact_latched = False
 
+        # Perception enforcement (config-gated)
+        perception_age_ms: Optional[int] = None
+        perception_ok = True
+        perception_reason = ""
+        if self._last_perception_mono is not None:
+            perception_age_ms = int((now_mono - self._last_perception_mono) * 1000.0)
+        if self.perception_enabled:
+            level_order = {"UNKNOWN": 0, "CLEAR": 1, "CAUTION": 2, "STOP": 3}
+            hazard_level = self._perception_hazard_level
+            min_level = self.perception_min_hazard_level
+            if self._last_perception_mono is None and self.perception_stale_denies:
+                perception_ok = False
+                perception_reason = "PERCEPTION_STALE"
+            elif self._perception_stale and self.perception_stale_denies:
+                perception_ok = False
+                perception_reason = "PERCEPTION_STALE"
+            elif level_order.get(hazard_level, 0) >= level_order.get(min_level, 2):
+                perception_ok = False
+                perception_reason = "PERCEPTION_HAZARD"
+            elif (
+                self._perception_min_stop_distance_m is not None
+                and self._last_stop_distance_m is not None
+                and (self._last_stop_distance_m + self.perception_min_stop_buffer_m) < self._perception_min_stop_distance_m
+            ):
+                perception_ok = False
+                perception_reason = "INSUFFICIENT_STOP_BUFFER"
+        else:
+            perception_ok = True
+            perception_reason = "DISABLED"
+
         if latched:
             safe = False
             reason = "EXPLICIT_STOP"
@@ -170,6 +260,9 @@ class SafetyGate(Node):
         elif self._impact_latched:
             safe = False
             reason = "IMPACT"
+        elif not perception_ok:
+            safe = False
+            reason = perception_reason
         elif not imu_ok:
             safe = False
             reason = "COMPONENT_MISSING"
@@ -191,6 +284,10 @@ class SafetyGate(Node):
             "rollover_latched": bool(self._rollover_latched),
             "imu_accel_g": self._last_imu_accel_g,
             "impact_latched": bool(self._impact_latched),
+            "perception_ok": bool(perception_ok),
+            "perception_age_ms": perception_age_ms,
+            "perception_reason": perception_reason,
+            "stop_distance_m": self._last_stop_distance_m,
         }
 
         m = String()

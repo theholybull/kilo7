@@ -350,6 +350,12 @@ Additive reason codes (Phase 2):
 - ROLLOVER
 - IMPACT
 
+Additive reason codes (Phase 4):
+
+- PERCEPTION_HAZARD
+- INSUFFICIENT_STOP_BUFFER
+- PERCEPTION_STALE
+
 Additive fields (Phase 2):
 
 - imu_ok: bool (true if recent IMU received within imu_ttl_ms)
@@ -358,6 +364,13 @@ Additive fields (Phase 2):
 - rollover_latched: bool (true if rollover detected, with hysteresis)
 - imu_accel_g: number|null (acceleration magnitude in g units, if provided)
 - impact_latched: bool (true if impact detected, with hysteresis)
+
+Additive fields (Phase 4):
+
+- perception_ok: bool (true if perception enforcement passes)
+- perception_age_ms: integer|null (age since last perception receipt; computed by robot clock)
+- perception_reason: string (gate reason or detail)
+- stop_distance_m: number|null (latest safety_model output, for observability)
 
 Alerts
 

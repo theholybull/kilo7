@@ -20,6 +20,11 @@ safety:
   rollover_hysteresis_deg: 5
   impact_accel_g_threshold: 2.0
   impact_hysteresis_g: 0.3
+  perception_enforcement:
+    enabled: false
+    min_hazard_level: "CAUTION"
+    min_stop_buffer_m: 0.0
+    stale_denies: true
 
 hardware:
   relay_mode: "rpi_gpio"
