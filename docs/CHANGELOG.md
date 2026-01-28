@@ -7,6 +7,25 @@ Rules:
 
 ---
 
+## CT-2026-01-28-RT-024 — Phase 5: Mapping UI capture script
+
+Date: 2026-01-28
+Scope: Mapping truth one-shot capture for UI/observability
+
+Change:
+- Added `tools/capture_mapping_once.sh` to record mapping truth + UI truth snapshot.
+
+Impact:
+- Provides a repeatable snapshot for mapping/UI observability without enabling pipelines.
+
+Files changed (repo):
+- tools/capture_mapping_once.sh
+- docs/BUILD_LOG.md
+- docs/PROJECT_STATE.md
+
+Verification:
+- Snapshot captured: `logs/phase_5/20260128-132130-mapping-once/`
+
 ## CT-2026-01-28-RT-023 — Phase 5: Mapping soak script + UI truth probe update
 
 Date: 2026-01-28

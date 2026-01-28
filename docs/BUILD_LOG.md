@@ -157,3 +157,13 @@ Date: 2026-01-28
 
 Verification
 - Soak logs: `logs/phase_5/20260128-125534-mapping-soak/`
+
+---
+
+Date: 2026-01-28
+
+## Phase 5 — Mapping UI One-shot Capture
+- Added `tools/capture_mapping_once.sh` for mapping/UI snapshot.
+
+Verification
+- Snapshot: `logs/phase_5/20260128-132130-mapping-once/`

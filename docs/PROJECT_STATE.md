@@ -165,5 +165,6 @@ Additions (2026-01-28):
   - New topic: `/kilo/state/mapping_json` with map status, localization pose validity, and quality fields.
   - Test added: `robot/test_phase5_mapping_summary.py` → PASS.
   - Mapping truth soak script added; logs captured under `/opt/kilo7/logs/phase_5/20260128-125534-mapping-soak/`.
+  - Mapping UI one-shot capture added; logs captured under `/opt/kilo7/logs/phase_5/20260128-132130-mapping-once/`.
 
 ```
