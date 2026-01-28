@@ -83,6 +83,9 @@ Artifacts (exact paths)
 - [logs/phase_3/20260128-115603-perception-once/perception_once.json](logs/phase_3/20260128-115603-perception-once/perception_once.json)
 - SAF-007 PASS run: [logs/phase_4/20260128-113403-saf-007-pass/](logs/phase_4/20260128-113403-saf-007-pass/)
 
+Operator Guide
+- See [docs/CHECKLIST_SAF_007.md](docs/CHECKLIST_SAF_007.md) for enable/verify/rollback steps and sample triggers.
+
 Reproduce:
 ```bash
 systemctl --no-pager --type=service | grep -E 'kilo7-(safety-gate|control|relay-kill|mqtt-bridge|safety-model|perception-summary|rosbridge)'

@@ -72,6 +72,20 @@ Impact:
 Verification:
 - Built `kilo_core` and confirmed perception summary publishes; test PASS.
 
+## CT-2026-01-28-RT-025 — Ops: SAF-007 operator checklist
+
+Date: 2026-01-28
+Scope: Operational documentation to enable/verify/rollback config-gated perception enforcement
+
+Change:
+- Added `docs/CHECKLIST_SAF_007.md` detailing prerequisites, config keys, restart steps, sample trigger commands, artifacts, rollback, and troubleshooting.
+
+Impact:
+- Provides field-ready, audit-friendly steps to safely toggle and validate SAF-007 without violating single-authority or offline-first guardrails.
+
+Verification:
+- Checklist linked from `docs/BUILD_LOG.md` and reviewed against implemented config keys in `kilo.yaml` and observability fields in `safety_gate.py`.
+
 
 ## CT-2026-01-27 — Step 1.8: control lock reasons + relay policy logs
 
