@@ -33,16 +33,21 @@ class PerceptionSummaryNode(Node):
         payload: Dict[str, Any] = {
             "schema_version": "state_perception_v1",
             "ts_ms": ts_ms,
+            "stale": False,
+            "stale_reason": "",
             # Inputs (stubbed)
             "sources": {
-                "oak_d_front": {"ok": True, "latency_ms": 0},
-                "rear_cam": {"ok": True, "latency_ms": 0},
+                "oak_d_front": {"ok": True, "latency_ms": 0, "age_ms": 0},
+                "rear_cam": {"ok": True, "latency_ms": 0, "age_ms": 0},
             },
             # Outputs (stubbed): placeholders for future hazards/stop metrics
             "hazards": {
                 "front_obstacle_distance_m": None,
                 "rear_obstacle_distance_m": None,
                 "side_clearance_m": None,
+                "min_stop_distance_m": None,
+                "hazard_level": "UNKNOWN",
+                "hazard_reason": "",
             },
             "quality": {
                 "confidence": None,

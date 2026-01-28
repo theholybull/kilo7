@@ -178,6 +178,27 @@ Files changed (repo):
 Verification:
 - `python3 robot/test_phase4_safety_model.py` → PASS
 
+## CT-2026-01-28-RT-020 — Phase 3 perception contract + stub updates
+
+Date: 2026-01-28
+Scope: Perception summary contract + stub publisher (truth-only)
+
+Change:
+- Added additive hazard/validity fields to `state_perception_v1`.
+- Stub publisher now emits `stale`, `stale_reason`, `hazard_level`, `hazard_reason`,
+  `min_stop_distance_m`, and per-source `age_ms`.
+
+Impact:
+- Perception truth fields are explicit and ready for Phase 3 integration.
+- No Safety Gate enforcement changes in this step.
+
+Files changed (repo):
+- robot/ros_ws/src/kilo_core/kilo_core/perception_summary.py
+- docs/INTERFACE_CONTRACT.md
+
+Verification:
+- `ros2 topic echo /kilo/state/perception_json --once` shows new additive fields
+
 ## CT-2026-01-27-RT-014 — Cleanup: archive old install + venv purge
 
 Date: 2026-01-27

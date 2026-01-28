@@ -29,6 +29,12 @@ WHY: Phase 4 requires deterministic stop-distance scaling without altering enfor
 IMPLICATIONS: New safety_model node publishes profile/params/inputs/outputs; no changes to Safety Gate or Control enforcement.
 REVERSIBLE: yes (remove node or disable service).
 
+2026-01-28
+DECISION: Expand state_perception_v1 with additive hazard/validity fields for Phase 3.
+WHY: Perception truth must be explicit and machine-validated before enforcement is wired.
+IMPLICATIONS: Stub publisher emits hazards/quality/staleness placeholders with clear defaults.
+REVERSIBLE: yes (additive-only fields; can be ignored by consumers).
+
 Decisions Ledger entry (add this verbatim)
 
 Decision: ROS 2 is a hard prerequisite for the backend install package

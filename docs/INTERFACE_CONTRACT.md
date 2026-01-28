@@ -377,6 +377,23 @@ Validity rule (LOCKED):
 Invalid or stale perception → Safety Gate MUST DENY
 unless a documented fallback exists
 
+Additive fields (Phase 3):
+
+- stale: bool
+- stale_reason: string
+- sources:
+  - oak_d_front: {ok: bool, latency_ms: int|null, age_ms: int|null}
+  - rear_cam: {ok: bool, latency_ms: int|null, age_ms: int|null}
+- hazards:
+  - front_obstacle_distance_m: number|null
+  - rear_obstacle_distance_m: number|null
+  - side_clearance_m: number|null
+  - min_stop_distance_m: number|null
+  - hazard_level: "UNKNOWN" | "CLEAR" | "CAUTION" | "STOP"
+  - hazard_reason: string
+- quality:
+  - confidence: number|null
+
 Phase 4 — Safety Model
 
 kilo/state/safety_model
