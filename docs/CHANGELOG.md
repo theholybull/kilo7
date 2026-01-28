@@ -7,6 +7,31 @@ Rules:
 
 ---
 
+## CT-2026-01-28-RT-022 — Phase 5: Mapping truth contracts + stub publisher
+
+Date: 2026-01-28
+Scope: Mapping/localization truth contracts; stub publisher + test (no heavy pipelines)
+
+Change:
+- Added `state_mapping_v1` contract for `/kilo/state/mapping_json`.
+- Added stub publisher `kilo_core.mapping_summary` (truth-only).
+- Added test `robot/test_phase5_mapping_summary.py`.
+- Added systemd unit template `kilo7-mapping-summary.service` (disabled by default).
+
+Impact:
+- Provides mapping/localization truth fields for UI/observability without enabling mapping pipelines.
+
+Files changed (repo):
+- robot/ros_ws/src/kilo_core/kilo_core/mapping_summary.py
+- robot/ros_ws/src/kilo_core/setup.py
+- robot/ros_ws/src/kilo_core/systemd/kilo7-mapping-summary.service
+- robot/test_phase5_mapping_summary.py
+- docs/INTERFACE_CONTRACT.md
+- docs/DECISIONS_LEDGER.md
+
+Verification:
+- `python3 robot/test_phase5_mapping_summary.py` → PASS
+
 ## CT-2026-01-28-RT-021 — Phase 4: Perception enforcement wiring (config-gated)
 
 Date: 2026-01-28

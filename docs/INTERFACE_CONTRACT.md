@@ -438,6 +438,34 @@ Phase 5 — Mapping
 
 kilo/state/mapping
 
+Schema (truth-only, additive-only):
+
+- schema_version: "state_mapping_v1"
+- ts_ms: integer (robot time)
+- stale: bool
+- stale_reason: string
+- map:
+  - name: string
+  - id: string
+  - status: "NONE" | "LOADING" | "READY" | "ERROR"
+  - source: "UNKNOWN" | "LOCAL" | "USB"
+  - frame_id: string (default "map")
+- localization:
+  - pose:
+    - x_m: number|null
+    - y_m: number|null
+    - yaw_rad: number|null
+  - pose_valid: bool
+  - age_ms: integer|null
+- quality:
+  - confidence: number|null
+  - localization_quality: "UNKNOWN" | "LOW" | "MEDIUM" | "HIGH"
+
+Rules (contract-only):
+
+- This topic is truth-only; consumers must not infer mapping state from cmd/phone topics.
+- Additive-only changes: new fields allowed; no renames/removals.
+
 Phase 6 — Navigation
 
 kilo/state/navigation

@@ -132,3 +132,17 @@ Verification
 Notes
 - Enforcement is opt-in by config; default behavior unchanged.
 - The Phase 4 wiring test runs Safety Gate in-process and temporarily stops systemd Safety Gate and MQTT bridge; both are restored after test.
+
+---
+
+Date: 2026-01-28
+
+## Phase 5 — Mapping Contracts + Stub Publisher
+- Added `state_mapping_v1` contract for `/kilo/state/mapping_json`.
+- Implemented `kilo_core.mapping_summary` stub publisher (truth-only, 1 Hz).
+- Added test `robot/test_phase5_mapping_summary.py`.
+- Added systemd unit template `kilo7-mapping-summary.service` (disabled by default).
+
+Verification
+- `python3 robot/test_phase5_mapping_summary.py` → PASS
+- Logs: `logs/phase_5/20260128-123353-mapping/`

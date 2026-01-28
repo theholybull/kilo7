@@ -1,5 +1,11 @@
 # Decisions Ledger (append-only)
 2026-01-28
+DECISION: Publish Phase 5 mapping/localization truth via stubbed `state_mapping_v1`.
+WHY: UI/observability need contract-first mapping fields without enabling heavy pipelines.
+IMPLICATIONS: New mapping truth topic `/kilo/state/mapping_json` with map status, localization pose validity, and quality fields; no enforcement changes.
+REVERSIBLE: yes (disable stub publisher or ignore topic).
+
+2026-01-28
 DECISION: Add config-gated perception enforcement in Safety Gate (default disabled).
 WHY: Phase 3 perception truth now includes hazards/staleness; enforcement wiring must be present but opt-in.
 IMPLICATIONS: Safety Gate reads `/kilo/state/perception_json` and `/kilo/state/safety_model`, denies on PERCEPTION_HAZARD / INSUFFICIENT_STOP_BUFFER / PERCEPTION_STALE when enabled; additive-only fields in state_safety_v1.

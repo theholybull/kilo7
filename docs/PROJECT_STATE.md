@@ -160,4 +160,9 @@ Additions (2026-01-27):
     - `robot/test_step_1_8_ui_truth.py` → PASS (3/3) aligned to documented precedence.
   - Repo hygiene: `.gitignore` updated to ignore Python venvs and caches.
 
+Additions (2026-01-28):
+  - Phase 5 mapping contracts defined (state_mapping_v1) and stub publisher added (truth-only).
+  - New topic: `/kilo/state/mapping_json` with map status, localization pose validity, and quality fields.
+  - Test added: `robot/test_phase5_mapping_summary.py` → PASS.
+
 ```
