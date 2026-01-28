@@ -7,6 +7,46 @@ Rules:
 
 ---
 
+## CT-2026-01-28-RT-026 — Phase 5: Read-only UI Truth Monitor
+
+Date: 2026-01-28
+Scope: Phone UI (read-only) for truth-derived lock/emotion
+
+Change:
+- Added a static UI under `phone/ui` that connects to rosbridge WebSocket and derives UI lock/emotion from `/kilo/state/safety_json` and `/kilo/state/control_json`.
+- UI is read-only and does not send commands.
+
+Impact:
+- Provides a lightweight UI for operators without violating single-authority or offline-first guardrails.
+
+Files changed (repo):
+- phone/ui/index.html
+- phone/ui/app.js
+- phone/ui/styles.css
+- phone/ui/README.md
+- phone/README.md
+- docs/PROJECT_STATE.md
+
+Verification:
+- Not run (static UI only).
+
+## CT-2026-01-28-RT-025 — Connection info snapshot (rosbridge)
+
+Date: 2026-01-28
+Scope: Connection diagnostics / observability logs
+
+Change:
+- Captured rosbridge connection info and service status for visualizer setup.
+
+Impact:
+- Provides future reference for endpoints and current service health.
+
+Files changed (repo):
+- docs/BUILD_LOG.md
+
+Verification:
+- Logs: `logs/phase_5/20260128-132803-connection-info/`
+
 ## CT-2026-01-28-RT-024 — Phase 5: Mapping UI capture script
 
 Date: 2026-01-28

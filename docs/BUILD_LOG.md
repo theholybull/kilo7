@@ -167,3 +167,20 @@ Date: 2026-01-28
 
 Verification
 - Snapshot: `logs/phase_5/20260128-132130-mapping-once/`
+
+---
+
+Date: 2026-01-28
+
+## Connection Info Snapshot (Visualizer)
+- Captured rosbridge connection details and service status.
+- Current IP: 10.10.10.63 (from `hostname -I`)
+- Recommended endpoints:
+  - `ws://kilo-dev.local:9090`
+  - `ws://10.10.10.63:9090`
+
+Verification
+- Logs: `logs/phase_5/20260128-132803-connection-info/`
+
+Notes
+- rosbridge service shows repeated restarts due to ROS logging directory error (`Failed to get logging directory`).
