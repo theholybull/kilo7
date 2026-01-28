@@ -7,6 +7,27 @@ Rules:
 
 ---
 
+## CT-2026-01-28-RT-023 — Phase 5: Mapping soak script + UI truth probe update
+
+Date: 2026-01-28
+Scope: Mapping truth soak scripts; UI truth probe observability update
+
+Change:
+- Added `tools/phase_5_mapping_soak.sh` to capture mapping truth + UI truth over 60s.
+- Updated `tools/ui_truth_probe.py` to include mapping observability fields (status/stale/pose_valid/quality).
+
+Impact:
+- Enables repeatable mapping truth soak captures without enabling heavy pipelines.
+
+Files changed (repo):
+- tools/phase_5_mapping_soak.sh
+- tools/ui_truth_probe.py
+- docs/BUILD_LOG.md
+- docs/PROJECT_STATE.md
+
+Verification:
+- Soak completed; logs under `logs/phase_5/20260128-125534-mapping-soak/`
+
 ## CT-2026-01-28-RT-022 — Phase 5: Mapping truth contracts + stub publisher
 
 Date: 2026-01-28

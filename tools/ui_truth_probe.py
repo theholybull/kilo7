@@ -5,11 +5,14 @@ Step 1.8 UI Truth Probe
 Derives UI lock/emotion strictly from authoritative topics:
 - /kilo/state/safety_json (state_safety_v1)
 - /kilo/state/control_json (state_control_v1)
+Optional observability:
+- /kilo/state/mapping_json (state_mapping_v1)
 
 Outputs a compact JSON summary for UI:
 - source fields: safe_to_move, reason, latched, override_required;
   locked, locked_reason; relay_killed, relay_reason; applied.throttle
 - derived: ui_lock, ui_emotion, ui_motion_allowed
+- mapping: mapping_status, mapping_stale, mapping_pose_valid, mapping_quality
 
 Usage:
   source /opt/ros/humble/setup.bash && source /opt/kilo7/robot/ros_ws/install/setup.bash
@@ -35,6 +38,8 @@ class UiTruthProbe(Node):
         self._printed = False
         self.create_subscription(String, "/kilo/state/safety_json", self._on_safety, 10)
         self.create_subscription(String, "/kilo/state/control_json", self._on_control, 10)
+        self.create_subscription(String, "/kilo/state/mapping_json", self._on_mapping, 10)
+        self._mapping: Dict[str, Any] = {}
 
     def _on_safety(self, msg: String) -> None:
         try:
@@ -54,6 +59,14 @@ class UiTruthProbe(Node):
         except Exception:
             pass
 
+    def _on_mapping(self, msg: String) -> None:
+        try:
+            obj = json.loads(msg.data)
+            if obj.get("schema_version") == "state_mapping_v1":
+                self._mapping = obj
+        except Exception:
+            pass
+
     def _derive_ui(self) -> Dict[str, Any]:
         # Extract authoritative fields
         safe = bool(self._safety.get("safe_to_move", False))
@@ -67,6 +80,12 @@ class UiTruthProbe(Node):
         relay_reason = str(self._control.get("relay_reason", "UNKNOWN"))
         applied = self._control.get("applied", {})
         applied_throttle = float(applied.get("throttle", 0.0))
+
+        # Mapping truth (optional)
+        mapping = self._mapping or {}
+        map_info = mapping.get("map", {}) if isinstance(mapping.get("map", {}), dict) else {}
+        localization = mapping.get("localization", {}) if isinstance(mapping.get("localization", {}), dict) else {}
+        quality = mapping.get("quality", {}) if isinstance(mapping.get("quality", {}), dict) else {}
 
         # Derived UI lock: lock if gate denies OR control locked OR relay killed
         ui_lock = (not safe) or locked or relay_killed
@@ -97,6 +116,10 @@ class UiTruthProbe(Node):
             "ui_lock": ui_lock,
             "ui_emotion": ui_emotion,
             "ui_motion_allowed": ui_motion_allowed,
+            "mapping_status": str(map_info.get("status", "")),
+            "mapping_stale": bool(mapping.get("stale", False)),
+            "mapping_pose_valid": bool(localization.get("pose_valid", False)),
+            "mapping_quality": str(quality.get("localization_quality", "")),
         }
 
     def _maybe_print(self) -> None:

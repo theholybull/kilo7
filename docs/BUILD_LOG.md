@@ -146,3 +146,14 @@ Date: 2026-01-28
 Verification
 - `python3 robot/test_phase5_mapping_summary.py` → PASS
 - Logs: `logs/phase_5/20260128-123353-mapping/`
+
+---
+
+Date: 2026-01-28
+
+## Phase 5 — Mapping Soak + UI Truth Probe Update
+- Added `tools/phase_5_mapping_soak.sh` to capture mapping truth + UI truth for 60s.
+- UI truth probe now includes mapping observability fields.
+
+Verification
+- Soak logs: `logs/phase_5/20260128-125534-mapping-soak/`

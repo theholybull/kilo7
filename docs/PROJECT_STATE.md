@@ -164,5 +164,6 @@ Additions (2026-01-28):
   - Phase 5 mapping contracts defined (state_mapping_v1) and stub publisher added (truth-only).
   - New topic: `/kilo/state/mapping_json` with map status, localization pose validity, and quality fields.
   - Test added: `robot/test_phase5_mapping_summary.py` → PASS.
+  - Mapping truth soak script added; logs captured under `/opt/kilo7/logs/phase_5/20260128-125534-mapping-soak/`.
 
 ```
