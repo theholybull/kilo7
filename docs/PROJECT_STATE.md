@@ -109,12 +109,10 @@ C) "When Safety Gate denies, throttle is forced neutral (0.0)"
    ✓ Relay also enforces at hardware level: relay_killed → throttle=0.0
 
 WHAT IS BROKEN (KNOWN):
-- rosbridge restart loop due to ROS logging directory error (visualizer connection unstable)
+None
 
 WHAT IS UNTESTED:
-- MQTT bridge under load (full publish/subscribe integration)
 - Phone sensor integration (when added)
-- Multi-node failure scenarios (one node crash, system recovery)
 
 Step 1.7 — Voice Intent + Phone IMU (PROVEN end-to-end)
 - mqtt_bridge configured to use LAN broker via mDNS: host=kilo-dev.local
@@ -171,6 +169,10 @@ Additions (2026-01-28):
   - New topic: `/kilo/state/docking_json` with mode/state/target/approach/contact/quality fields.
   - Test added: `robot/test_phase7_docking_summary.py` → PASS.
   - Full verification suite PASS (phases 1–7); logs under `/opt/kilo7/logs/phase_6/20260128-152421-verification/`.
+  - Ops hardening complete:
+    - rosbridge logging dir fix applied; service stable on 9090.
+    - MQTT bridge load/soak captured under `/opt/kilo7/logs/ops/20260128-154927-mqtt-soak/`.
+    - Core service recovery check captured under `/opt/kilo7/logs/ops/20260128-155146-recovery/`.
   - Added read-only UI Truth Monitor at `phone/ui` (rosbridge WebSocket; derives lock/emotion from safety/control truth).
   - Added verification runner: `tools/run_verification_suite.sh` writes logs to `logs/phase_6/<ts>-verification/` for reproducible local test runs.
 

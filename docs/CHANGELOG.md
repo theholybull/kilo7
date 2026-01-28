@@ -7,6 +7,32 @@ Rules:
 
 ---
 
+## CT-2026-01-28-RT-032 — Ops hardening: rosbridge stability + MQTT load + recovery checks
+
+Date: 2026-01-28
+Scope: Ops tooling + docs
+
+Change:
+- Added rosbridge logging dir env and doc note.
+- Added MQTT load/soak script.
+- Added core service recovery check script.
+- Logged ops artifacts in BUILD_LOG and PROJECT_STATE.
+
+Impact:
+- Visualizer connection stabilized; ops readiness for load and recovery documented.
+
+Files changed (repo):
+- robot/ros_ws/run/systemd/kilo7-rosbridge.service
+- tools/mqtt_load_soak.sh
+- tools/ops_recovery_check.sh
+- docs/VISUALIZER.md
+- docs/BUILD_LOG.md
+- docs/PROJECT_STATE.md
+
+Verification:
+- MQTT soak: `logs/ops/20260128-154927-mqtt-soak/`
+- Recovery check: `logs/ops/20260128-155146-recovery/`
+
 ## CT-2026-01-28-RT-031 — Lockdown status docs update
 
 Date: 2026-01-28

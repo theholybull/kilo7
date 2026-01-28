@@ -232,3 +232,11 @@ Date: 2026-01-28
 ## Lockdown Status
 - Phases 1–7 contracts + stubs verified; full suite PASS.
 - Remaining ops gaps: rosbridge stability, MQTT load/soak, multi-node failure recovery.
+- Ops hardening runs complete:
+  - rosbridge logging dir fix applied; service stable on 9090.
+  - MQTT load/soak captured.
+  - Core service recovery check captured.
+
+Verification
+- MQTT soak: `logs/ops/20260128-154927-mqtt-soak/`
+- Recovery check: `logs/ops/20260128-155146-recovery/`
