@@ -72,6 +72,31 @@ Next Options
 
 Date: 2026-01-28
 
+## Health + One-Shot Captures (post SAF-007)
+- Ran systemd health check for `kilo7-*` services (safety-gate, control, relay-kill, mqtt-bridge, safety-model, perception-summary, rosbridge).
+- Captured one-shots of truth topics for audit using helper scripts:
+  - Safety: `tools/capture_safety_once.sh` → logs saved under `logs/phase_4/<ts>-safety-once/safety_once.json`
+  - Perception: `tools/capture_perception_once.sh` → logs saved under `logs/phase_3/<ts>-perception-once/perception_once.json`
+
+Artifacts (exact paths)
+- [logs/phase_4/20260128-115603-safety-once/safety_once.json](logs/phase_4/20260128-115603-safety-once/safety_once.json)
+- [logs/phase_3/20260128-115603-perception-once/perception_once.json](logs/phase_3/20260128-115603-perception-once/perception_once.json)
+- SAF-007 PASS run: [logs/phase_4/20260128-113403-saf-007-pass/](logs/phase_4/20260128-113403-saf-007-pass/)
+
+Reproduce:
+```bash
+systemctl --no-pager --type=service | grep -E 'kilo7-(safety-gate|control|relay-kill|mqtt-bridge|safety-model|perception-summary|rosbridge)'
+bash /opt/kilo7/tools/capture_safety_once.sh
+bash /opt/kilo7/tools/capture_perception_once.sh
+```
+
+Notes:
+- Captures reflect current config-gated enforcement (SAF-007). Enablement remains off by default.
+
+---
+
+Date: 2026-01-28
+
 ## Phase 3 — Perception Summary (truth-only stub)
 - Implemented `kilo_core.perception_summary` publishing `/kilo/state/perception_json` (`state_perception_v1`).
 - Added systemd unit template `kilo7-perception-summary.service`.
