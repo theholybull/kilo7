@@ -470,6 +470,35 @@ Phase 6 — Navigation
 
 kilo/state/navigation
 
+Schema (truth-only, additive-only):
+
+- schema_version: "state_navigation_v1"
+- ts_ms: integer (robot time)
+- stale: bool
+- stale_reason: string
+- mode: "NONE" | "MANUAL" | "AUTO"
+- state: "IDLE" | "PLANNING" | "EXECUTING" | "PAUSED" | "ERROR"
+- goal:
+  - x_m: number|null
+  - y_m: number|null
+  - yaw_rad: number|null
+  - frame_id: string (default "map")
+- route:
+  - valid: bool
+  - age_ms: integer|null
+  - remaining_m: number|null
+- localization:
+  - pose_valid: bool
+  - age_ms: integer|null
+- quality:
+  - confidence: number|null
+  - nav_quality: "UNKNOWN" | "LOW" | "MEDIUM" | "HIGH"
+
+Rules (contract-only):
+
+- This topic is truth-only; consumers must not infer navigation state from cmd/phone topics.
+- Additive-only changes: new fields allowed; no renames/removals.
+
 Phase 7 — Docking
 
 kilo/state/docking

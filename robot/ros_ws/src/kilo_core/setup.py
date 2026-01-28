@@ -30,6 +30,7 @@ setup(
             "safety_model = kilo_core.safety_model:main",
             "perception_summary = kilo_core.perception_summary:main",
             "mapping_summary = kilo_core.mapping_summary:main",
+            "navigation_summary = kilo_core.navigation_summary:main",
         ],
     },
 )

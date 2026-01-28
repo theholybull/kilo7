@@ -166,6 +166,9 @@ Additions (2026-01-28):
   - Test added: `robot/test_phase5_mapping_summary.py` → PASS.
   - Mapping truth soak script added; logs captured under `/opt/kilo7/logs/phase_5/20260128-125534-mapping-soak/`.
   - Mapping UI one-shot capture added; logs captured under `/opt/kilo7/logs/phase_5/20260128-132130-mapping-once/`.
+  - Phase 6 navigation contracts defined (state_navigation_v1) and stub publisher added (truth-only).
+  - New topic: `/kilo/state/navigation_json` with mode/state/goal/route/localization/quality fields.
+  - Test added: `robot/test_phase6_navigation_summary.py` → PASS.
   - Added read-only UI Truth Monitor at `phone/ui` (rosbridge WebSocket; derives lock/emotion from safety/control truth).
 
 ```

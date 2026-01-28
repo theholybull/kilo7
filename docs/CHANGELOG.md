@@ -7,6 +7,31 @@ Rules:
 
 ---
 
+## CT-2026-01-28-RT-027 — Phase 6: Navigation truth contracts + stub publisher
+
+Date: 2026-01-28
+Scope: Navigation truth contracts; stub publisher + test (no heavy pipeline)
+
+Change:
+- Added `state_navigation_v1` contract for `/kilo/state/navigation_json`.
+- Added stub publisher `kilo_core.navigation_summary` (truth-only).
+- Added test `robot/test_phase6_navigation_summary.py`.
+- Added systemd unit template `kilo7-navigation-summary.service` (disabled by default).
+
+Impact:
+- Provides navigation truth fields for UI/observability without enabling navigation pipelines.
+
+Files changed (repo):
+- robot/ros_ws/src/kilo_core/kilo_core/navigation_summary.py
+- robot/ros_ws/src/kilo_core/setup.py
+- robot/ros_ws/src/kilo_core/systemd/kilo7-navigation-summary.service
+- robot/test_phase6_navigation_summary.py
+- docs/INTERFACE_CONTRACT.md
+- docs/DECISIONS_LEDGER.md
+
+Verification:
+- `python3 robot/test_phase6_navigation_summary.py` → PASS
+
 ## CT-2026-01-28-RT-026 — Phase 5: Read-only UI Truth Monitor
 
 Date: 2026-01-28

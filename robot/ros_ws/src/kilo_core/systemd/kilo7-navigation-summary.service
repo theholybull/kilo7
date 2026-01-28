@@ -1,0 +1,15 @@
+[Unit]
+Description=KILO7 Navigation Summary (Phase 6, truth-only)
+After=network.target
+
+[Service]
+Type=simple
+User=kilo
+WorkingDirectory=/opt/kilo7
+Environment=ROS_DISTRO=humble
+ExecStart=/bin/bash -lc 'source /opt/ros/humble/setup.bash && source /opt/kilo7/robot/ros_ws/install/setup.bash && ros2 run kilo_core navigation_summary'
+Restart=always
+RestartSec=2
+
+[Install]
+WantedBy=multi-user.target

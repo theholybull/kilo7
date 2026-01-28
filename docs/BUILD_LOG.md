@@ -184,3 +184,17 @@ Verification
 
 Notes
 - rosbridge service shows repeated restarts due to ROS logging directory error (`Failed to get logging directory`).
+
+---
+
+Date: 2026-01-28
+
+## Phase 6 — Navigation Contracts + Stub Publisher
+- Added `state_navigation_v1` contract for `/kilo/state/navigation_json`.
+- Implemented `kilo_core.navigation_summary` stub publisher (truth-only, 1 Hz).
+- Added test `robot/test_phase6_navigation_summary.py`.
+- Added systemd unit template `kilo7-navigation-summary.service` (disabled by default).
+
+Verification
+- `python3 robot/test_phase6_navigation_summary.py` → PASS
+- Logs: `logs/phase_6/20260128-140840-navigation/`
