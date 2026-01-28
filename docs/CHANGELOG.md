@@ -134,6 +134,33 @@ Verification:
 - `python3 robot/test_step_2_4_rollover.py` → PASS
 - `python3 robot/test_step_2_5_impact.py` → PASS
 
+## CT-2026-01-27-RT-018 — Phase 4: Safety model publisher + calc harness
+
+Date: 2026-01-27
+Scope: Speed-aware safety model truth + calc tests (no enforcement changes)
+
+Change:
+- Added `/kilo/state/safety_model` publisher and schema `state_safety_model_v1`.
+- Added safety model config profiles (crawl/normal/sport) with reaction/decel/buffer/max speed.
+- Added calc-only test harness for stop-distance scaling.
+- Added systemd unit for safety model node.
+
+Impact:
+- Provides deterministic, observable safety model truth for Phase 4.
+- No changes to Safety Gate enforcement in this step.
+
+Files changed (repo):
+- robot/ros_ws/src/kilo_core/kilo_core/safety_model.py
+- robot/ros_ws/src/kilo_core/config/kilo.yaml
+- robot/ros_ws/src/kilo_core/systemd/kilo7-safety-model.service
+- robot/ros_ws/src/kilo_core/setup.py
+- robot/test_phase4_safety_model.py
+- docs/INTERFACE_CONTRACT.md
+- docs/DECISIONS_LEDGER.md
+
+Verification:
+- `python3 robot/test_phase4_safety_model.py` → PASS
+
 ## CT-2026-01-27-RT-014 — Cleanup: archive old install + venv purge
 
 Date: 2026-01-27

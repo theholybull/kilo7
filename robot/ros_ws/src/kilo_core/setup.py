@@ -27,6 +27,7 @@ setup(
             "safety_gate = kilo_core.safety_gate:main",
             "control_pwm = kilo_core.control_pwm:main",
             "relay_kill = kilo_core.relay_kill:main",
+            "safety_model = kilo_core.safety_model:main",
         ],
     },
 )

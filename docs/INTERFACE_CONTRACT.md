@@ -377,6 +377,29 @@ Phase 4 — Safety Model
 
 kilo/state/safety_model
 
+Schema (implemented; additive-only):
+
+- schema_version: "state_safety_model_v1"
+- ts_ms: integer (robot time)
+- profile: "crawl" | "normal" | "sport"
+- params:
+  - reaction_time_s: number
+  - brake_decel_mps2: number
+  - buffer_m: number
+- inputs:
+  - speed_mps: number
+- outputs:
+  - stop_distance_m: number
+  - max_safe_speed_mps: number|null (optional)
+  - model_valid: bool
+  - model_reason: string ("OK" | "INVALID_INPUT" | "PARAM_MISSING")
+
+Rules (contract-only):
+
+- This topic is **truth only**; consumers must not infer safety model state from cmd/phone topics.
+- Computation must be deterministic and logged in tests.
+- Additive-only changes: new fields allowed; no renames/removals.
+
 Phase 5 — Mapping
 
 kilo/state/mapping

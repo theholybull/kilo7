@@ -26,6 +26,25 @@ hardware:
   relay_gpio_pin: 17
   relay_kill_level_low: false
 
+safety_model:
+  profile: "normal"
+  profiles:
+    crawl:
+      reaction_time_s: 0.8
+      brake_decel_mps2: 1.5
+      buffer_m: 0.7
+      max_speed_mps: 0.5
+    normal:
+      reaction_time_s: 0.6
+      brake_decel_mps2: 2.0
+      buffer_m: 0.5
+      max_speed_mps: 1.2
+    sport:
+      reaction_time_s: 0.4
+      brake_decel_mps2: 3.0
+      buffer_m: 0.3
+      max_speed_mps: 2.0
+
 pwm:
   mode: "pigpio"
   steer_gpio_pin: 12
