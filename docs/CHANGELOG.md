@@ -24,6 +24,23 @@ Verification:
 - Service enabled via systemd; port 9090 listener observed.
 - Launch attempts report "address already in use" when service active (expected).
 
+## CT-2026-01-28-RT-020 — Phase 3: Perception summary stub (truth-only)
+
+Date: 2026-01-28
+Scope: Add perception summary publisher + test + systemd unit template; contracts aligned
+
+Change:
+- New node `kilo_core.perception_summary` publishes `/kilo/state/perception_json` (schema `state_perception_v1`).
+- Test added: `robot/test_phase3_perception_summary.py` validates schema and required fields.
+- Systemd unit template added: `robot/ros_ws/src/kilo_core/systemd/kilo7-perception-summary.service`.
+- Interface contract updated to reflect topic name `perception_json`.
+
+Impact:
+- Provides truth-only perception summary for UI/observability; prepares inputs for Phase 4 enforcement without violating single-authority model.
+
+Verification:
+- Built `kilo_core` and confirmed perception summary publishes; test PASS.
+
 
 ## CT-2026-01-27 — Step 1.8: control lock reasons + relay policy logs
 

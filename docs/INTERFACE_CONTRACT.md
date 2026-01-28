@@ -316,6 +316,10 @@ Includes:
 armed
 
 locked + locked_reason
+kilo/state/safety_model — schema state_safety_model_v1
+
+Truth-only publishing of speed-aware safety model parameters and outputs. Additive-only; does not create a second arbiter. Safety Gate remains the only motion authority.
+
 
 stale_cmd
 
@@ -366,7 +370,7 @@ kilo/state/system — schema state_system_v1
 RESERVED PHASE 3–7 CONTRACTS (OPTIONAL UNTIL IMPLEMENTED)
 Phase 3 — Perception Summaries
 
-kilo/state/perception — schema state_perception_v1
+kilo/state/perception_json — schema state_perception_v1
 
 Validity rule (LOCKED):
 

@@ -17,6 +17,12 @@ WHY: Impact is a required Phase 2 safety trigger; must be enforced by the single
 IMPLICATIONS: Safety Gate reads optional IMU accel, publishes imu_accel_g/impact_latched, denies with reason IMPACT.
 REVERSIBLE: yes (tune impact thresholds or disable by setting impact_accel_g_threshold=0).
 
+2026-01-28
+DECISION: Publish Phase 4 speed-aware safety model as robot truth on `/kilo/state/safety_model`.
+WHY: Provide UI/observability and future enforcement inputs without altering single authority; enable contract-first development.
+IMPLICATIONS: New schema `state_safety_model_v1` with profile/params/inputs/outputs; enforcement wiring deferred until Phase 3 perception provides hazard/stop metrics.
+REVERSIBLE: yes (disable publishing or select neutral profile with minimal buffer).
+
 2026-01-27
 DECISION: Publish speed-aware safety model truth on /kilo/state/safety_model (state_safety_model_v1).
 WHY: Phase 4 requires deterministic stop-distance scaling without altering enforcement yet.
