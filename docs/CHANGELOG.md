@@ -7,6 +7,27 @@ Rules:
 
 ---
 
+## CT-2026-01-28-RT-030 — Verification suite fixes + IMU stale test robustness
+
+Date: 2026-01-28
+Scope: Verification tooling + Phase 2.3 test robustness
+
+Change:
+- Fixed verification runner to tolerate ROS setup unbound variables.
+- Hardened IMU staleness test to clear explicit stop before asserting staleness.
+
+Impact:
+- Full verification suite runs cleanly; IMU stale test no longer flakes on EXPLICIT_STOP latch.
+
+Files changed (repo):
+- tools/run_verification_suite.sh
+- robot/test_step_2_3_imu_stale.py
+- docs/BUILD_LOG.md
+- docs/PROJECT_STATE.md
+
+Verification:
+- Full suite PASS: `logs/phase_6/20260128-152421-verification/`
+
 ## CT-2026-01-28-RT-029 — Phase 7: Docking truth contracts + stub publisher
 
 Date: 2026-01-28

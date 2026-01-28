@@ -95,8 +95,20 @@ class Step23ImuStaleTest(Node):
         print(f"\n{BOLD}Step 2.3 — IMU stale denies motion{RESET}\n")
 
         # Assert override + clear explicit stop
-        self._publish_cmd("unlock", "cmd_unlock_v1")
-        self._publish_cmd("clear_stop", "cmd_clear_stop_v1")
+        for _ in range(3):
+            self._publish_cmd("unlock", "cmd_unlock_v1")
+            self._publish_cmd("clear_stop", "cmd_clear_stop_v1")
+            rclpy.spin_once(self, timeout_sec=0.1)
+
+        # Ensure explicit stop latch cleared before testing staleness
+        deadline = time.time() + 3.0
+        while time.time() < deadline:
+            rclpy.spin_once(self, timeout_sec=0.1)
+            safety = self.latest_safety or {}
+            if safety.get("explicit_stop") is False:
+                break
+            self._publish_cmd("clear_stop", "cmd_clear_stop_v1")
+            self._publish_cmd("unlock", "cmd_unlock_v1")
 
         # Publish a fresh IMU sample
         self._publish_imu()

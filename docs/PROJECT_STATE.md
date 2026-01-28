@@ -112,7 +112,6 @@ WHAT IS BROKEN (KNOWN):
 None — Steps 1.4, 1.5 & 1.6 complete and passing
 
 WHAT IS UNTESTED:
-- Step 1.7+ (Perception, Mapping, Navigation, Speed-aware safety)
 - MQTT bridge under load (full publish/subscribe integration)
 - Phone sensor integration (when added)
 - Multi-node failure scenarios (one node crash, system recovery)
@@ -172,6 +171,7 @@ Additions (2026-01-28):
   - Phase 7 docking contracts defined (state_docking_v1) and stub publisher added (truth-only).
   - New topic: `/kilo/state/docking_json` with mode/state/target/approach/contact/quality fields.
   - Test added: `robot/test_phase7_docking_summary.py` → PASS.
+  - Full verification suite PASS (phases 1–7); logs under `/opt/kilo7/logs/phase_6/20260128-152421-verification/`.
   - Added read-only UI Truth Monitor at `phone/ui` (rosbridge WebSocket; derives lock/emotion from safety/control truth).
   - Added verification runner: `tools/run_verification_suite.sh` writes logs to `logs/phase_6/<ts>-verification/` for reproducible local test runs.
 
