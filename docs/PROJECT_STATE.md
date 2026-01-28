@@ -1,8 +1,8 @@
 CURRENT PHASE:
-Phase 1 — Bring-up (Steps 1.4, 1.5 & 1.6 COMPLETE ✅)
+Phases 1–7 complete (truth contracts + stub publishers + tests PASS)
 
 CURRENT GOAL:
-Step 1.8 — Prepare UI truth + soak (PASS, 2026-01-27, CT-2026-01-27)
+Ops hardening + app/UI integration readiness (no pipeline enablement by default)
 
 LAST CONFIRMED WORKING STATE:
 ✅ Step 1.4 PASS — Safety Gate ROS Authority (logic-only)
@@ -109,7 +109,7 @@ C) "When Safety Gate denies, throttle is forced neutral (0.0)"
    ✓ Relay also enforces at hardware level: relay_killed → throttle=0.0
 
 WHAT IS BROKEN (KNOWN):
-None — Steps 1.4, 1.5 & 1.6 complete and passing
+- rosbridge restart loop due to ROS logging directory error (visualizer connection unstable)
 
 WHAT IS UNTESTED:
 - MQTT bridge under load (full publish/subscribe integration)
@@ -144,11 +144,10 @@ Pending verifications for Step 1.7 PASS:
  - Control: unlock after UNLOCK request; publishes `locked` and `locked_reason` transitions.
 
 NEXT CONCRETE STEP:
-- Step 1.8 scope proposal (to confirm):
-  - UI truth derivation: drive UI lock/emotion strictly from `/kilo/state/safety_json` and `/kilo/state/control_json`.
-  - Soak tests: sustained IMU + intent flows; confirm no raw drive paths exposed.
-  - Add invariants for intent handling and UI truth mapping.
-  - Keep offline-first and single-authority guardrails.
+- Stabilize visualizer connectivity and ops:
+  - Fix rosbridge logging directory error; confirm stable WebSocket on 9090.
+  - Run MQTT bridge load tests + soak with phone sensors.
+  - Add crash/restart recovery checks for safety/control/bridge nodes.
 
 Additions (2026-01-27):
   - Cleanup completed: archived and removed old install `/opt/kilo7_old_20260119_143131` and venvs at `/opt/kilo7/.venv`.

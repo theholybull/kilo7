@@ -7,6 +7,25 @@ Rules:
 
 ---
 
+## CT-2026-01-28-RT-031 — Lockdown status docs update
+
+Date: 2026-01-28
+Scope: Docs only
+
+Change:
+- Updated PROJECT_STATE current phase/goal and remaining ops gaps.
+- Added lockdown status entry to BUILD_LOG.
+
+Impact:
+- Clarifies post‑Phase 7 priorities and remaining tests.
+
+Files changed (repo):
+- docs/PROJECT_STATE.md
+- docs/BUILD_LOG.md
+
+Verification:
+- Docs only.
+
 ## CT-2026-01-28-RT-030 — Verification suite fixes + IMU stale test robustness
 
 Date: 2026-01-28
