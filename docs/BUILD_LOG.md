@@ -76,9 +76,11 @@ Date: 2026-01-28
 - Implemented `kilo_core.perception_summary` publishing `/kilo/state/perception_json` (`state_perception_v1`).
 - Added systemd unit template `kilo7-perception-summary.service`.
 - Added test `robot/test_phase3_perception_summary.py` → validates schema/fields; aligned to contracts.
+ - Added validity test `robot/test_phase3_perception_validity.py` → verifies staleness flags, per-source ages, hazard fields.
 
 Verification
 - Built `kilo_core` and executed the test; perception summary publishes at 1 Hz.
+ - Validity test PASS: confirms additive fields presence and types.
 - Optional logs: one-shot capture under `logs/phase_3/` via helper script.
 
 Notes
