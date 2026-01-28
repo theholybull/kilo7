@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>KILO .7 — UI Truth Monitor</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="app">
+      <header>
+        <div>
+          <h1>KILO .7 — UI Truth Monitor</h1>
+          <p class="subtitle">Derived only from /kilo/state/safety_json + /kilo/state/control_json</p>
+        </div>
+        <div class="connection">
+          <div class="row">
+            <label for="host">Host</label>
+            <input id="host" type="text" inputmode="url" />
+          </div>
+          <div class="row">
+            <label for="port">Port</label>
+            <input id="port" type="number" min="1" max="65535" />
+          </div>
+          <div class="row">
+            <button id="connect">Connect</button>
+          </div>
+          <div id="connStatus" class="status">Disconnected</div>
+        </div>
+      </header>
+
+      <section class="grid">
+        <div class="card highlight" id="motionCard">
+          <h2>Motion Allowed</h2>
+          <div class="value" id="motionAllowed">—</div>
+          <div class="sub" id="emotion">—</div>
+          <div class="meta">
+            <div>UI Lock: <span id="uiLock">—</span></div>
+            <div>UI Emotion: <span id="uiEmotion">—</span></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>Safety Truth</h2>
+          <div class="kv"><span>safe_to_move</span><strong id="safeToMove">—</strong></div>
+          <div class="kv"><span>reason</span><strong id="safetyReason">—</strong></div>
+          <div class="kv"><span>latched</span><strong id="safetyLatched">—</strong></div>
+          <div class="kv"><span>override_required</span><strong id="safetyOverride">—</strong></div>
+          <div class="meta">
+            <div>Last RX: <span id="safetyRx">—</span></div>
+            <div>Age: <span id="safetyAge">—</span></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>Control Truth</h2>
+          <div class="kv"><span>locked</span><strong id="controlLocked">—</strong></div>
+          <div class="kv"><span>locked_reason</span><strong id="controlLockedReason">—</strong></div>
+          <div class="kv"><span>relay_killed</span><strong id="controlRelay">—</strong></div>
+          <div class="kv"><span>relay_reason</span><strong id="controlRelayReason">—</strong></div>
+          <div class="kv"><span>applied.throttle</span><strong id="controlThrottle">—</strong></div>
+          <div class="meta">
+            <div>Last RX: <span id="controlRx">—</span></div>
+            <div>Age: <span id="controlAge">—</span></div>
+          </div>
+        </div>
+
+        <div class="card full">
+          <h2>Raw Truth Payloads</h2>
+          <div class="payloads">
+            <div>
+              <h3>/kilo/state/safety_json</h3>
+              <pre id="safetyRaw">{}</pre>
+            </div>
+            <div>
+              <h3>/kilo/state/control_json</h3>
+              <pre id="controlRaw">{}</pre>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <footer>
+        <div>Read-only UI. No commands are sent.</div>
+      </footer>
+    </div>
+
+    <script src="app.js"></script>
+  </body>
+</html>

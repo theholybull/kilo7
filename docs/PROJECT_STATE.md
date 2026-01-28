@@ -166,5 +166,6 @@ Additions (2026-01-28):
   - Test added: `robot/test_phase5_mapping_summary.py` → PASS.
   - Mapping truth soak script added; logs captured under `/opt/kilo7/logs/phase_5/20260128-125534-mapping-soak/`.
   - Mapping UI one-shot capture added; logs captured under `/opt/kilo7/logs/phase_5/20260128-132130-mapping-once/`.
+  - Added read-only UI Truth Monitor at `phone/ui` (rosbridge WebSocket; derives lock/emotion from safety/control truth).
 
 ```
