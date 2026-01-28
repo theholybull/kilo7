@@ -7,6 +7,49 @@ Rules:
 
 ---
 
+## CT-2026-01-28-RT-029 — Phase 7: Docking truth contracts + stub publisher
+
+Date: 2026-01-28
+Scope: Docking truth contracts; stub publisher + test (no heavy pipeline)
+
+Change:
+- Added `state_docking_v1` contract for `/kilo/state/docking_json`.
+- Added stub publisher `kilo_core.docking_summary` (truth-only).
+- Added test `robot/test_phase7_docking_summary.py`.
+- Added systemd unit template `kilo7-docking-summary.service` (disabled by default).
+
+Impact:
+- Provides docking truth fields for UI/observability without enabling docking pipelines.
+
+Files changed (repo):
+- robot/ros_ws/src/kilo_core/kilo_core/docking_summary.py
+- robot/ros_ws/src/kilo_core/setup.py
+- robot/ros_ws/src/kilo_core/systemd/kilo7-docking-summary.service
+- robot/test_phase7_docking_summary.py
+- docs/INTERFACE_CONTRACT.md
+- docs/DECISIONS_LEDGER.md
+
+Verification:
+- `python3 robot/test_phase7_docking_summary.py` → PASS
+
+## CT-2026-01-28-RT-028 — Verification runner script
+
+Date: 2026-01-28
+Scope: Test execution tooling
+
+Change:
+- Added `tools/run_verification_suite.sh` to execute phase tests sequentially with timeouts and write logs to `logs/phase_6/<timestamp>-verification/`.
+
+Impact:
+- Simplifies reproducible local verification and log collection across phases.
+
+Files changed (repo):
+- tools/run_verification_suite.sh
+- docs/PROJECT_STATE.md
+
+Verification:
+- Script created; manual run produces summary and per-test logs under `logs/phase_6/`.
+
 ## CT-2026-01-28-RT-027 — Phase 6: Navigation truth contracts + stub publisher
 
 Date: 2026-01-28

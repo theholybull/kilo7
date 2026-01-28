@@ -1,5 +1,11 @@
 # Decisions Ledger (append-only)
 2026-01-28
+DECISION: Publish Phase 7 docking truth via stubbed `state_docking_v1`.
+WHY: Contract-first docking fields are needed for UI/observability without enabling docking pipelines.
+IMPLICATIONS: New docking truth topic `/kilo/state/docking_json` with mode/state/target/approach/contact/quality fields; no enforcement changes.
+REVERSIBLE: yes (disable stub publisher or ignore topic).
+
+2026-01-28
 DECISION: Publish Phase 6 navigation truth via stubbed `state_navigation_v1`.
 WHY: Contract-first navigation fields are needed for UI/observability without enabling heavy pipelines.
 IMPLICATIONS: New navigation truth topic `/kilo/state/navigation_json` with mode/state/goal/route/localization/quality fields; no enforcement changes.

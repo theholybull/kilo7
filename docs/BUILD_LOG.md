@@ -198,3 +198,17 @@ Date: 2026-01-28
 Verification
 - `python3 robot/test_phase6_navigation_summary.py` → PASS
 - Logs: `logs/phase_6/20260128-140840-navigation/`
+
+---
+
+Date: 2026-01-28
+
+## Phase 7 — Docking Contracts + Stub Publisher
+- Added `state_docking_v1` contract for `/kilo/state/docking_json`.
+- Implemented `kilo_core.docking_summary` stub publisher (truth-only, 1 Hz).
+- Added test `robot/test_phase7_docking_summary.py`.
+- Added systemd unit template `kilo7-docking-summary.service` (disabled by default).
+
+Verification
+- `python3 robot/test_phase7_docking_summary.py` → PASS
+- Logs: `logs/phase_7/20260128-144656-docking/`

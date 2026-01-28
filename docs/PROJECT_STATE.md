@@ -169,6 +169,10 @@ Additions (2026-01-28):
   - Phase 6 navigation contracts defined (state_navigation_v1) and stub publisher added (truth-only).
   - New topic: `/kilo/state/navigation_json` with mode/state/goal/route/localization/quality fields.
   - Test added: `robot/test_phase6_navigation_summary.py` → PASS.
+  - Phase 7 docking contracts defined (state_docking_v1) and stub publisher added (truth-only).
+  - New topic: `/kilo/state/docking_json` with mode/state/target/approach/contact/quality fields.
+  - Test added: `robot/test_phase7_docking_summary.py` → PASS.
   - Added read-only UI Truth Monitor at `phone/ui` (rosbridge WebSocket; derives lock/emotion from safety/control truth).
+  - Added verification runner: `tools/run_verification_suite.sh` writes logs to `logs/phase_6/<ts>-verification/` for reproducible local test runs.
 
 ```

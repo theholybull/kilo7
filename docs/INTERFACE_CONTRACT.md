@@ -503,6 +503,37 @@ Phase 7 — Docking
 
 kilo/state/docking
 
+Schema (truth-only, additive-only):
+
+- schema_version: "state_docking_v1"
+- ts_ms: integer (robot time)
+- stale: bool
+- stale_reason: string
+- mode: "NONE" | "SEARCH" | "APPROACH" | "DOCK"
+- state: "IDLE" | "SEARCHING" | "APPROACHING" | "ALIGNING" | "DOCKING" | "DOCKED" | "ERROR"
+- target:
+  - id: string
+  - pose:
+    - x_m: number|null
+    - y_m: number|null
+    - yaw_rad: number|null
+    - frame_id: string (default "map")
+- approach:
+  - valid: bool
+  - age_ms: integer|null
+  - distance_m: number|null
+- contact:
+  - engaged: bool
+  - charge_detected: bool
+- quality:
+  - confidence: number|null
+  - docking_quality: "UNKNOWN" | "LOW" | "MEDIUM" | "HIGH"
+
+Rules (contract-only):
+
+- This topic is truth-only; consumers must not infer docking state from cmd/phone topics.
+- Additive-only changes: new fields allowed; no renames/removals.
+
 SAFETY + PERFORMANCE INVARIANTS (INTERFACE-LEVEL)
 
 Loss of drive → neutral (cmd TTL)

@@ -31,6 +31,7 @@ setup(
             "perception_summary = kilo_core.perception_summary:main",
             "mapping_summary = kilo_core.mapping_summary:main",
             "navigation_summary = kilo_core.navigation_summary:main",
+            "docking_summary = kilo_core.docking_summary:main",
         ],
     },
 )
