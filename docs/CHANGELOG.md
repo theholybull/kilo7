@@ -29,6 +29,25 @@ Files changed (repo):
 Verification:
 - Script created and made executable; manual run confirmed on current build.
 
+## CT-2026-02-03-RT-034 — Restore parts list (post-crash)
+
+Date: 2026-02-03
+Scope: Docs only
+
+Change:
+- Restored parts list doc with confirmed chassis/cameras and placeholders for pending links.
+
+Impact:
+- Single source for BOM restored after crash.
+
+Files changed (repo):
+- docs/PARTS_LIST.md
+- docs/PROJECT_STATE.md
+- docs/CHANGELOG.md
+
+Verification:
+- Docs only.
+
 ## CT-2026-01-28-RT-032 — Ops hardening: rosbridge stability + MQTT load + recovery checks
 
 Date: 2026-01-28

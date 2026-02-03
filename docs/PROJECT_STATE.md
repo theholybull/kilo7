@@ -151,6 +151,7 @@ Additions (2026-02-03):
   - Added fresh rebuild script at tools/fresh_build_rebuild.sh for Ubuntu 22.04 bring-up.
   - Updated docs/NEW_MACHINE.md with concrete rebuild steps.
   - Mosquitto configured to listen on 0.0.0.0:1883; mDNS verified for kilo-dev.local.
+  - Restored parts list doc at docs/PARTS_LIST.md (SCX10 chassis, OAK-D Lite front cam, 1080p rear cam; links pending).
 
 Additions (2026-01-27):
   - Cleanup completed: archived and removed old install `/opt/kilo7_old_20260119_143131` and venvs at `/opt/kilo7/.venv`.
