@@ -147,6 +147,11 @@ NEXT CONCRETE STEP:
   - Run MQTT bridge load tests + soak with phone sensors.
   - Add crash/restart recovery checks for safety/control/bridge nodes.
 
+Additions (2026-02-03):
+  - Added fresh rebuild script at tools/fresh_build_rebuild.sh for Ubuntu 22.04 bring-up.
+  - Updated docs/NEW_MACHINE.md with concrete rebuild steps.
+  - Mosquitto configured to listen on 0.0.0.0:1883; mDNS verified for kilo-dev.local.
+
 Additions (2026-01-27):
   - Cleanup completed: archived and removed old install `/opt/kilo7_old_20260119_143131` and venvs at `/opt/kilo7/.venv`.
   - Archives stored under `/opt/kilo7/logs/cleanup-20260127-103113` (verified contents).

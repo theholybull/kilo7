@@ -7,6 +7,28 @@ Rules:
 
 ---
 
+## CT-2026-02-03-RT-033 — Fresh build rebuild script + new machine steps
+
+Date: 2026-02-03
+Scope: Rebuild tooling + docs
+
+Change:
+- Added fresh rebuild script for Ubuntu 22.04 bring-up.
+- Expanded NEW_MACHINE.md with concrete rebuild steps.
+- Logged current rebuild readiness in PROJECT_STATE.
+
+Impact:
+- Repeatable rebuild process for future fresh installs.
+
+Files changed (repo):
+- tools/fresh_build_rebuild.sh
+- docs/NEW_MACHINE.md
+- docs/PROJECT_STATE.md
+- docs/CHANGELOG.md
+
+Verification:
+- Script created and made executable; manual run confirmed on current build.
+
 ## CT-2026-01-28-RT-032 — Ops hardening: rosbridge stability + MQTT load + recovery checks
 
 Date: 2026-01-28
