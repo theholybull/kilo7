@@ -66,6 +66,24 @@ Files changed (repo):
 Verification:
 - Docs only.
 
+## CT-2026-02-03-RT-036 — Add additional parts links
+
+Date: 2026-02-03
+Scope: Docs only
+
+Change:
+- Added two additional pending parts links (ASIN B07WS5XY63, B01ICN5OAM).
+
+Impact:
+- Parts list updated with user-provided links for later labeling.
+
+Files changed (repo):
+- docs/PARTS_LIST.md
+- docs/CHANGELOG.md
+
+Verification:
+- Docs only.
+
 ## CT-2026-01-28-RT-032 — Ops hardening: rosbridge stability + MQTT load + recovery checks
 
 Date: 2026-01-28
