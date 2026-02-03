@@ -84,6 +84,24 @@ Files changed (repo):
 Verification:
 - Docs only.
 
+## CT-2026-02-03-RT-037 — Add standard RC servo to parts list
+
+Date: 2026-02-03
+Scope: Docs only
+
+Change:
+- Added standard RC steering servo to parts list (link pending).
+
+Impact:
+- Parts list updated with confirmed steering component.
+
+Files changed (repo):
+- docs/PARTS_LIST.md
+- docs/CHANGELOG.md
+
+Verification:
+- Docs only.
+
 ## CT-2026-01-28-RT-032 — Ops hardening: rosbridge stability + MQTT load + recovery checks
 
 Date: 2026-01-28
